@@ -7,12 +7,7 @@ import {
 	useRef,
 	useState,
 } from "react";
-import type {
-	ComponentPropsWithoutRef,
-	ErrorInfo,
-	PropsWithRef,
-	ReactNode,
-} from "react";
+import type { ComponentPropsWithoutRef, ErrorInfo, ReactNode } from "react";
 import type { StrictPropsWithChildren } from "@/types";
 import { isDifferentArray } from "@/util";
 import { ErrorboundaryProvider } from "./ErrorBoundaryContext";
@@ -105,7 +100,7 @@ export class ErrorBoundary extends Component<
 			? renderFallback({
 					error: error as Error,
 					reset: this.resetErrorBoundary,
-			  })
+				})
 			: renderFallback;
 	}
 
