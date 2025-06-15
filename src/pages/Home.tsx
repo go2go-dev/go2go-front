@@ -1,8 +1,12 @@
-export default function Home() {
+import React from "react";
+
+const Home = () => {
 	return (
-		<div>
-			<h1>홈</h1>
-			<p>메인 페이지입니다.</p>
+		<div className="p-4">
+			<h1 className="text-2xl font-bold mb-4">Home</h1>
+			<p className="text-gray-600">Welcome to our application!</p>
 		</div>
 	);
-}
+};
+
+export default Home;
