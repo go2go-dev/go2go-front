@@ -58,5 +58,3 @@ jobs:
           projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
           directory: dist
           branch: ${{ github.head_ref || github.ref_name }}
-          commitHash: ${{ github.sha }}
-          production: ${{ github.ref_name == 'refs/heads/main' }}
