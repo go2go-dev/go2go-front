@@ -3,8 +3,8 @@ import Layout from "./layouts/Layout";
 import BottomLayout from "./layouts/BottomLayout";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import ErrorPage from "./pages/ErrorPage";
+import TodoApp from "./pages/TodoApp";
 
 export const router = createBrowserRouter([
 	{
@@ -22,7 +22,7 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: "register",
-				element: <Register />,
+				element: <TodoApp />,
 			},
 			{
 				element: <BottomLayout />,
