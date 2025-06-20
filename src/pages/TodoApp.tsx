@@ -1,12 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import TodoSection from '@/components/todo/TodoSection';
-import TodoItem from '@/components/todo/TodoItem';
-import { Plus, ChevronLeft } from 'lucide-react';
+import bgImg from '@/assets/img/bgImage.png';
+import TodoHeader from '@/components/TodoHeader';
+import { useNavigate } from 'react-router-dom';
 
 export default function TodoApp() {
   const [isAdding, setIsAdding] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const [todoData, setTodoData] = useState([
     {
@@ -54,41 +56,37 @@ export default function TodoApp() {
   return (
     <div className="relative min-h-screen pb-24 bg-white">
       {/* Header */}
-      <div className="flex justify-between items-center p-4">
-        <button>
-          <ChevronLeft />
-        </button>
-        <h1 className="text-sm font-semibold">먼지 치우기</h1>
-        <button onClick={startAdding}>
-          <Plus />
-        </button>
-      </div>
+      <TodoHeader
+        title="먼지 치우기"
+        onLeftClick={() => navigate('/')}
+        onRightClick={startAdding}
+      />
 
+      <img src={bgImg} alt="먼지치우기배경" className="w-full" />
       {/* Todo Sections */}
-      <div className="px-4">
-        {/* 상단에 입력 중인 아이템 */}
-        {isAdding && (
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-gray-100">
-            <div className="w-5 h-5 min-w-5 min-h-5 bg-gray-200 rounded-md" />
-            <input
-              ref={inputRef}
-              type="text"
-              className="text-sm flex-1 bg-transparent outline-none"
-              placeholder="할 일을 적어주세요"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAddTodo();
-                if (e.key === 'Escape') setIsAdding(false);
-              }}
-            />
-          </div>
-        )}
 
-        {todoData.map((section, idx) => (
-          <TodoSection key={idx} {...section} />
-        ))}
-      </div>
+      {/* 상단에 입력 중인 아이템 */}
+      {isAdding && (
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-gray-100">
+          <div className="w-5 h-5 min-w-5 min-h-5 bg-gray-200 rounded-md" />
+          <input
+            ref={inputRef}
+            type="text"
+            className="text-sm flex-1 bg-transparent outline-none"
+            placeholder="할 일을 적어주세요"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleAddTodo();
+              if (e.key === 'Escape') setIsAdding(false);
+            }}
+          />
+        </div>
+      )}
+
+      {todoData.map((section, idx) => (
+        <TodoSection key={idx} {...section} />
+      ))}
     </div>
   );
 }
