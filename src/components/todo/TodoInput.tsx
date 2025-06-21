@@ -5,7 +5,7 @@ interface TodoInputBarProps {
 }
 
 export default function TodoInputBar({ onClose }: TodoInputBarProps) {
-  const [showInput, setShowInput] = useState(false);
+  const [showInput] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
