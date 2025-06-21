@@ -21,7 +21,7 @@ export const router = createBrowserRouter([
 				element: <Login />,
 			},
 			{
-				path: "register",
+				path: "todo",
 				element: <TodoApp />,
 			},
 			{

@@ -1,5 +1,5 @@
 import { ChevronRightIcon, PlayIcon, UserIcon } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 
@@ -32,11 +32,9 @@ const timerCards = [
 ];
 
 export default function Home() {
+	const navigate = useNavigate();
 	return (
-		<div
-			className="bg-white flex flex-row justify-center w-full"
-			data-model-id="178:6506"
-		>
+		<div>
 			<div className="bg-white w-[390px] h-[844px] relative">
 				{/* Header */}
 				<header className="absolute w-[390px] h-[45px] top-[54px] left-0 flex items-center justify-between px-5">
@@ -59,7 +57,12 @@ export default function Home() {
 								할 일을 적고 해치워봐요
 							</span>
 						</div>
-						<Button variant="ghost" size="icon" className="mr-1">
+						<Button
+							variant="ghost"
+							size="icon"
+							className="mr-1"
+							onClick={() => navigate("/todo")}
+						>
 							<ChevronRightIcon className="h-6 w-6" />
 						</Button>
 					</CardContent>
