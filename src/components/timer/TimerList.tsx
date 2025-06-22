@@ -1,4 +1,4 @@
-import TimerCard from '../timer/TimerCard';
+import TimerCard from './TimerCard';
 import type { Timer } from '@/constants/types';
 
 interface TimerListProps {

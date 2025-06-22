@@ -1,5 +1,5 @@
 import { User, ChevronRight } from 'lucide-react';
-import TimerList from '@/components/todo/TimerList';
+import TimerList from '@/components/timer/TimerList';
 import type { Timer } from '@/constants/types';
 import { useNavigate } from 'react-router-dom';
 
@@ -37,12 +37,11 @@ export default function TimerApp() {
 
       {/* 하단 메뉴 */}
       <div className="mt-8 mb-4">
-        <div className="flex items-center justify-between py-4 border-t border-gray-200">
-          <div>
-            <div className="font-medium text-gray-800">먼저 치우기</div>
-            <div className="text-sm text-gray-500">할 일을 먼저 해치워요</div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-gray-400" onClick={() => navigate('/todo')} />
+        <div className="bg-100 p-4 flex items-center justify-between py-4 rounded-xl">
+          <div className="text-body2 text-black">먼지 치우기</div>
+          <div className="text-body4 text-500">할 일을 적고 해치워봐요</div>
+
+          <ChevronRight className="w-5 h-5 text-black" onClick={() => navigate('/todo')} />
         </div>
       </div>
     </div>
