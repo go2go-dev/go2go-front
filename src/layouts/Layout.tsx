@@ -1,9 +1,10 @@
 import { Outlet } from "react-router-dom";
+import MobileLayout from "./MobileLayout";
 
 export default function Layout() {
 	return (
-		<div>
+		<MobileLayout>
 			<Outlet />
-		</div>
+		</MobileLayout>
 	);
 }
