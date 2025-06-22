@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 import textStylesPlugin from './src/style/textStyle';
+import customColors from './src/style/color';
 
 export default {
   darkMode: ['class'],
@@ -12,6 +13,7 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
       colors: {
+        ...customColors,
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

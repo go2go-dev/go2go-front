@@ -4,6 +4,8 @@ import bgImg from '@/assets/img/bgImage.png';
 import TodoHeader from '@/components/TodoHeader';
 import { useNavigate } from 'react-router-dom';
 
+const timerTags = [{ name: '코딩 공부하기' }, { name: '디자인 스터디하기' }, { name: '운동하기' }];
+
 export default function TodoApp() {
   const [isAdding, setIsAdding] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -31,6 +33,18 @@ export default function TodoApp() {
       ],
     },
   ]);
+
+  const handleDeleteTodo = (sectionDate: string, todoIndex: number) => {
+    setTodoData((prevData) =>
+      prevData.map((section) => {
+        if (section.date === sectionDate) {
+          const updatedTodos = section.todos.filter((_, index) => index !== todoIndex);
+          return { ...section, todos: updatedTodos };
+        }
+        return section;
+      }),
+    );
+  };
 
   // + 버튼 눌렀을 때 입력 상태로 변경
   const startAdding = () => {
@@ -67,25 +81,49 @@ export default function TodoApp() {
 
       {/* 상단에 입력 중인 아이템 */}
       {isAdding && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-gray-100">
-          <div className="w-5 h-5 min-w-5 min-h-5 bg-gray-200 rounded-md" />
-          <input
-            ref={inputRef}
-            type="text"
-            className="text-sm flex-1 bg-transparent outline-none"
-            placeholder="할 일을 적어주세요"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleAddTodo();
-              if (e.key === 'Escape') setIsAdding(false);
-            }}
-          />
-        </div>
+        <>
+          {/* 입력창 */}
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-gray-100">
+            <div className="w-5 h-5 min-w-5 min-h-5 bg-gray-200 rounded-md" />
+            <input
+              ref={inputRef}
+              type="text"
+              className="text-sm flex-1 bg-transparent outline-none"
+              placeholder="할 일을 적어주세요"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleAddTodo();
+                if (e.key === 'Escape') setIsAdding(false);
+              }}
+            />
+          </div>
+
+          {/* 타이머 태그 버튼들 */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 z-50 safe-area-inset-bottom">
+            <div className="flex gap-2 flex-wrap justify-center">
+              {timerTags.map((tag, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setInputValue((prev) => prev + tag.name);
+                  }}
+                  className="flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium px-3 py-2 rounded-full border border-yellow-200 hover:bg-yellow-200 transition-colors"
+                >
+                  ⏱ {tag.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
-      {todoData.map((section, idx) => (
-        <TodoSection key={idx} {...section} />
+      {todoData.map((section) => (
+        <TodoSection
+          key={section.date}
+          {...section}
+          onDeleteTodo={(todoIndex) => handleDeleteTodo(section.date, todoIndex)}
+        />
       ))}
     </div>
   );
