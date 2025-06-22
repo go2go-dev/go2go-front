@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import ErrorPage from './pages/ErrorPage';
 import TodoApp from './pages/TodoApp';
 import AddTimer from './pages/AddTimer';
+import TimerDetail from './pages/TimerDetail';
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,10 @@ export const router = createBrowserRouter([
       {
         path: 'addTimer',
         element: <AddTimer />,
+      },
+      {
+        path: 'timerDetail',
+        element: <TimerDetail />,
       },
       {
         element: <BottomLayout />,

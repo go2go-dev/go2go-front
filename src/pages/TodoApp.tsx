@@ -32,6 +32,18 @@ export default function TodoApp() {
     },
   ]);
 
+  const handleDeleteTodo = (sectionDate: string, todoIndex: number) => {
+    setTodoData((prevData) =>
+      prevData.map((section) => {
+        if (section.date === sectionDate) {
+          const updatedTodos = section.todos.filter((_, index) => index !== todoIndex);
+          return { ...section, todos: updatedTodos };
+        }
+        return section;
+      }),
+    );
+  };
+
   // + 버튼 눌렀을 때 입력 상태로 변경
   const startAdding = () => {
     setIsAdding(true);
@@ -84,8 +96,12 @@ export default function TodoApp() {
         </div>
       )}
 
-      {todoData.map((section, idx) => (
-        <TodoSection key={idx} {...section} />
+      {todoData.map((section) => (
+        <TodoSection
+          key={section.date}
+          {...section}
+          onDeleteTodo={(todoIndex) => handleDeleteTodo(section.date, todoIndex)}
+        />
       ))}
     </div>
   );

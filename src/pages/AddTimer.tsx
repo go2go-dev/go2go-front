@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -20,8 +18,6 @@ export default function AddTimer() {
   }
 
   const ITEM_HEIGHT = 48;
-  const CONTAINER_HEIGHT = 240;
-  const PADDING = 96;
 
   const getScrollPositionForIndex = (index: number): number => {
     return index * ITEM_HEIGHT;
@@ -164,11 +160,6 @@ export default function AddTimer() {
 
             <div className="h-24" />
           </div>
-        </div>
-
-        {/* 선택된 시간 표시 */}
-        <div className="mt-4 text-center">
-          <div className="text-2xl font-bold text-gray-800">{formatTime(selectedMinutes)}</div>
         </div>
       </div>
 
