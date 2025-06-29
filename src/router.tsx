@@ -8,6 +8,7 @@ import TodoApp from './pages/TodoApp';
 import AddTimer from './pages/AddTimer';
 import TimerDetail from './pages/TimerDetail';
 import Setting from './pages/Setting';
+import CountDown from './pages/CountDown';
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +39,14 @@ export const router = createBrowserRouter([
       {
         path: 'setting',
         element: <Setting />,
+      },
+      {
+        path: 'countdown/:timerId',
+        element: <CountDown />,
+      },
+      {
+        path: 'timer/:timerId/detail',
+        element: <TimerDetail />,
       },
       {
         element: <BottomLayout />,
