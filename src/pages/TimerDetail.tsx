@@ -8,24 +8,13 @@ import { useLocation } from 'react-router-dom';
 import { useTimerDetail } from '@/hooks/useTimerDetail';
 import { useAddTodo } from '@/hooks/useAddTodo';
 
-type Todo = {
-  todoId: number;
-  isDone: boolean;
-  content: string;
-};
-
-type TimerData = {
-  name: string;
-  minutes: number;
-  todoList: Todo[];
-};
 
 export default function TimerDetail() {
   const { timerId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { name, minutes } = location.state || {};
-  const { data, isLoading } = useTimerDetail(timerId ? Number(timerId) : undefined);
+  const { data } = useTimerDetail(timerId ? Number(timerId) : undefined);
 
   // 타이머 관련 상태
   const [remainingSeconds, setRemainingSeconds] = useState(minutes ? minutes * 60 : 0);
@@ -39,7 +28,7 @@ export default function TimerDetail() {
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { mutate: addTodoMutation, isPending: isAddingTodo } = useAddTodo();
+  const { mutate: addTodoMutation,  } = useAddTodo();
 
   // 타이머 로직 - 1초마다 감소
   useEffect(() => {
