@@ -1,38 +1,67 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Plus, ArrowLeft } from 'lucide-react';
 import TodoItem from '@/components/todo/TodoItem';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useEndTimer } from '@/hooks/useEndTimer';
+import { useLocation } from 'react-router-dom';
+import { useTimerDetail } from '@/hooks/useTimerDetail';
+import { useAddTodo } from '@/hooks/useAddTodo';
 
-type Todo = {
-  todoId: number;
-  isDone: boolean;
-  content: string;
-};
-
-type TimerData = {
-  name: string;
-  minutes: number;
-  todoList: Todo[];
-};
-
-const MOCK_DATA: TimerData = {
-  name: '정처기 공부',
-  minutes: 130,
-  todoList: [
-    { todoId: 1, isDone: true, content: '1장 공부하기' },
-    { todoId: 2, isDone: false, content: '2장 공부하기' },
-    { todoId: 3, isDone: false, content: '3장 복습하기' },
-    { todoId: 4, isDone: false, content: '4장 요약 정리' },
-    { todoId: 5, isDone: false, content: '기출문제 풀기' },
-  ],
-};
 
 export default function TimerDetail() {
+  const { timerId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { name, minutes } = location.state || {};
+  const { data } = useTimerDetail(timerId ? Number(timerId) : undefined);
+
+  // 타이머 관련 상태
+  const [remainingSeconds, setRemainingSeconds] = useState(minutes ? minutes * 60 : 0);
+  const [isRunning, setIsRunning] = useState(true); // 타이머 시작 시 자동으로 실행
+  const [isCompleted, setIsCompleted] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const { mutate: endTimer, isPending: isEnding } = useEndTimer();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [todoList, setTodoList] = useState<Todo[]>(MOCK_DATA.todoList);
   const [isAdding, setIsAdding] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { mutate: addTodoMutation,  } = useAddTodo();
+
+  // 타이머 로직 - 1초마다 감소
+  useEffect(() => {
+    if (isRunning && remainingSeconds > 0) {
+      intervalRef.current = setInterval(() => {
+        setRemainingSeconds((prev) => {
+          if (prev <= 1) {
+            setIsCompleted(true);
+            setIsRunning(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isRunning, remainingSeconds]);
+
+  // 타이머 완료 시 알림
+  useEffect(() => {
+    if (isCompleted) {
+      alert('타이머가 완료되었습니다! 🎉');
+    }
+  }, [isCompleted]);
 
   useEffect(() => {
     if (isAdding && inputRef.current) {
@@ -41,41 +70,118 @@ export default function TimerDetail() {
   }, [isAdding]);
 
   const handleAddTodo = () => {
-    if (!inputValue.trim()) return;
-    const newTodo: Todo = {
-      todoId: Date.now(),
-      content: inputValue.trim(),
-      isDone: false,
-    };
-    setTodoList((prev) => [...prev, newTodo]);
-    setInputValue('');
-    setIsAdding(false);
+    if (!inputValue.trim() || !timerId) return;
+
+    addTodoMutation(
+      {
+        timerId: Number(timerId),
+        content: inputValue.trim(),
+      },
+      {
+        onSuccess: () => {
+          setInputValue('');
+          setIsAdding(false);
+        },
+        onError: () => {
+          alert('할일 추가에 실패했습니다.');
+        },
+      },
+    );
+  };
+  // 초를 MM:SS 형태로 변환
+  const formatTime = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const formatTime = (minutes: number) => {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    if (h === 0) return `${m.toString().padStart(2, '0')}:00`;
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  const handleEnd = () => {
+    if (!timerId) return;
+
+    // 타이머 중지
+    setIsRunning(false);
+
+    // 확인 후 종료
+    if (confirm('타이머를 종료하시겠습니까?')) {
+      endTimer(Number(timerId), {
+        onSuccess: () => {
+          navigate('/');
+        },
+        onError: () => {
+          alert('타이머 종료 실패');
+          setIsRunning(true); // 실패 시 다시 실행
+        },
+      });
+    } else {
+      setIsRunning(true); // 취소 시 다시 실행
+    }
   };
+
+  const handleBack = () => {
+    if (confirm('타이머를 중단하고 나가시겠습니까?')) {
+      setIsRunning(false);
+      navigate('/');
+    }
+  };
+
+  // 진행률 계산
+  const totalSeconds = minutes ? minutes * 60 : 0;
+  const progress = totalSeconds > 0 ? ((totalSeconds - remainingSeconds) / totalSeconds) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-between px-4 pt-16 pb-6 relative">
+    <div className="max-w-sm mx-auto bg-white h-screen flex flex-col items-center justify-between px-4 pt-16 pb-6 relative">
       {/* 헤더 */}
-      <div className="absolute top-4 left-4 text-sm text-gray-800 cursor-pointer">&larr;</div>
-      <h1 className="text-lg font-semibold">{MOCK_DATA.name}</h1>
+      <div className="absolute top-4 left-4 cursor-pointer p-2" onClick={handleBack}>
+        <ArrowLeft className="w-5 h-5 text-gray-800" />
+      </div>
+      <h1 className="text-lg font-semibold">{name || '타이머'}</h1>
 
-      {/* 이미지 */}
-      <div className="mt-10">
-        <img src="/default.png" alt="Timer image" className="w-24 h-24 mx-auto" />
+      {/* 원형 프로그레스바와 타이머 */}
+      <div className="relative mt-10">
+        <div className="relative w-48 h-48">
+          {/* 배경 원 */}
+          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" stroke="#e5e7eb" strokeWidth="8" fill="none" />
+            {/* 진행률 원 */}
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              stroke="#fbbf24"
+              strokeWidth="8"
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 45}`}
+              strokeDashoffset={`${2 * Math.PI * 45 * (1 - progress / 100)}`}
+              className="transition-all duration-1000 ease-linear"
+            />
+          </svg>
+
+          {/* 중앙 타이머 표시 */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div
+                className={`text-4xl font-bold ${isCompleted ? 'text-green-500' : 'text-gray-800'}`}
+              >
+                {isCompleted ? '완료!' : formatTime(remainingSeconds)}
+              </div>
+              <div className="text-sm text-gray-500 mt-2">
+                {isCompleted ? '수고하셨습니다!' : isRunning ? '진행 중' : '일시정지'}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 타이머 시간 */}
-      <div className="text-4xl font-bold text-gray-800 mt-8">{formatTime(MOCK_DATA.minutes)}</div>
-
       {/* 종료하기 버튼 */}
-      <button className="mt-6 px-6 py-3 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">
-        종료하기
+      <button
+        className={`mt-6 px-6 py-3 rounded-full text-sm font-medium transition-colors ${
+          isCompleted ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+        }`}
+        onClick={handleEnd}
+        disabled={isEnding}
+      >
+        {isCompleted ? '완료하기' : '종료하기'}
       </button>
 
       {/* 바텀시트 트리거 */}
@@ -147,9 +253,11 @@ export default function TimerDetail() {
 
                 {/* 할일 목록 */}
                 <div className="space-y-3">
-                  {todoList.map((todo) => (
-                    <TodoItem key={todo.todoId} text={todo.content} isChecked={todo.isDone} />
-                  ))}
+                  {data?.todoList?.map(
+                    (todo: { todoId: number; isDone: boolean; content: string }) => (
+                      <TodoItem key={todo.todoId} text={todo.content} isChecked={todo.isDone} />
+                    ),
+                  )}
                 </div>
               </div>
             </motion.div>

@@ -1,15 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAddTimer } from '@/hooks/useAddTimer';
 
 export default function AddTimer() {
   const [timerName, setTimerName] = useState<string>('');
   const [selectedMinutes, setSelectedMinutes] = useState<number>(25);
 
+  const [remainingSeconds, setRemainingSeconds] = useState(25 * 60);
+
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isScrollingRef = useRef<boolean>(false);
   const navigate = useNavigate();
+  const { mutate: addTimer, isPending } = useAddTimer();
 
   // 5 ~ 180분까지 5분 단위로 옵션 생성
   const timeOptions: number[] = [];
@@ -87,16 +91,46 @@ export default function AddTimer() {
     return remaining === 0 ? `${hours}시간` : `${hours}시간 ${remaining}분`;
   };
 
+  const handleSave = () => {
+    if (!timerName.trim()) return;
+    addTimer(
+      { name: timerName, minutes: selectedMinutes },
+      {
+        onSuccess: () => {
+          navigate('/');
+        },
+        onError: () => {
+          alert('타이머 추가 실패');
+        },
+      },
+    );
+  };
+
+  useEffect(() => {
+    if (remainingSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setRemainingSeconds((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [remainingSeconds]);
+
+  // 시간 포맷
+  const format = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
   return (
-    <div className="max-w-sm mx-auto bg-white min-h-screen flex flex-col">
+    <div className="max-w-sm mx-auto bg-white h-screen flex flex-col px-4">
       {/* 상단 헤더 */}
-      <div className="flex items-center justify-between  pt-10">
-        <X className="w-6 h-6 text-gray-600" onClick={() => navigate('/')} />
+      <div className="flex items-center justify-between pt-10 pb-8">
+        <X className="w-6 h-6 text-gray-600 cursor-pointer" onClick={() => navigate('/')} />
         <div></div>
       </div>
 
       {/* 타이머 이름 입력 */}
-      <div className=" mb-8">
+      <div className="mb-8">
         <label className="block text-gray-600 text-sm mb-2">타이머 이름 *</label>
         <input
           type="text"
@@ -108,11 +142,11 @@ export default function AddTimer() {
       </div>
 
       {/* 타이머 시간 선택 */}
-      <div className="mb-8">
+      <div className="mb-8 flex-1">
         <label className="block text-gray-600 text-sm mb-4">타이머 시간 *</label>
 
         <div className="relative">
-          <div className="absolute bg-100 left-0 right-0 top-1/2 transform -translate-y-1/2 h-12 rounded-lg  pointer-events-none z-0"></div>
+          <div className="absolute bg-100 left-0 right-0 top-1/2 transform -translate-y-1/2 h-12 rounded-lg pointer-events-none z-0"></div>
 
           <div
             ref={scrollRef}
@@ -128,7 +162,7 @@ export default function AddTimer() {
 
             {timeOptions.map((minutes, index) => {
               const isSelected = selectedMinutes === minutes;
-              const scale = isSelected ? 'scale-110' : 'scale-100'; // scale 효과만 내부 요소에 적용
+              const scale = isSelected ? 'scale-110' : 'scale-100';
               const opacity = isSelected ? 'opacity-100' : 'opacity-50';
               const fontWeight = isSelected ? 'font-bold' : 'font-medium';
 
@@ -150,10 +184,7 @@ export default function AddTimer() {
                     color: isSelected ? '#1f2937' : '#9ca3af',
                   }}
                 >
-                  <div className={`transform ${scale}`}>
-                    {/* scale을 내부 div에만 적용 */}
-                    {formatTime(minutes)}
-                  </div>
+                  <div className={`transform ${scale}`}>{formatTime(minutes)}</div>
                 </div>
               );
             })}
@@ -164,18 +195,21 @@ export default function AddTimer() {
       </div>
 
       {/* 저장 버튼 */}
-      <div className="mt-auto mb-8">
+      <div className="pb-8">
         <button
           className={`w-full py-4 rounded-2xl font-medium text-lg transition-colors ${
             timerName.trim()
               ? 'bg-yellow-300 text-gray-800 hover:bg-yellow-400'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
-          disabled={!timerName.trim()}
+          disabled={!timerName.trim() || isPending}
+          onClick={handleSave}
         >
           저장
         </button>
       </div>
+
+      <div className="text-6xl font-bold">{format(remainingSeconds)}</div>
     </div>
   );
 }
