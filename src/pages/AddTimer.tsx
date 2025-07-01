@@ -6,7 +6,7 @@ import { useAddTimer } from '@/hooks/useAddTimer';
 export default function AddTimer() {
   const [timerName, setTimerName] = useState<string>('');
   const [selectedMinutes, setSelectedMinutes] = useState<number>(25);
-
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const [remainingSeconds, setRemainingSeconds] = useState(25 * 60);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -14,6 +14,34 @@ export default function AddTimer() {
   const isScrollingRef = useRef<boolean>(false);
   const navigate = useNavigate();
   const { mutate: addTimer, isPending } = useAddTimer();
+
+  const [keyboardOffset, setKeyboardOffset] = useState(0); // 👈 키보드 감지용
+
+  useEffect(() => {
+    if (nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
+  }, []);
+
+  // 키보드 대응
+  useEffect(() => {
+    const handleViewportResize = () => {
+      const vh = window.visualViewport?.height || window.innerHeight;
+      const totalHeight = window.innerHeight;
+      const keyboardHeight = totalHeight - vh;
+
+      if (keyboardHeight > 100) {
+        setKeyboardOffset(keyboardHeight);
+      } else {
+        setKeyboardOffset(0);
+      }
+    };
+
+    window.visualViewport?.addEventListener('resize', handleViewportResize);
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleViewportResize);
+    };
+  }, []);
 
   // 5 ~ 180분까지 5분 단위로 옵션 생성
   const timeOptions: number[] = [];
@@ -114,17 +142,10 @@ export default function AddTimer() {
     return () => clearInterval(timer);
   }, [remainingSeconds]);
 
-  // 시간 포맷
-  const format = (sec: number) => {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
-
   return (
-    <div className="max-w-sm mx-auto bg-white h-screen flex flex-col px-4">
+    <div className="max-w-sm mx-auto bg-white h-screen flex flex-col pb-[120px]">
       {/* 상단 헤더 */}
-      <div className="flex items-center justify-between pt-10 pb-8">
+      <div className="flex items-center justify-between pt-5 pb-8">
         <X className="w-6 h-6 text-gray-600 cursor-pointer" onClick={() => navigate('/')} />
         <div></div>
       </div>
@@ -134,9 +155,12 @@ export default function AddTimer() {
         <label className="block text-gray-600 text-sm mb-2">타이머 이름 *</label>
         <input
           type="text"
+          ref={nameInputRef}
           value={timerName}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTimerName(e.target.value)}
           placeholder="타이머 이름"
+          autoComplete="off"
+          inputMode="text"
           className="w-full px-0 py-3 text-lg border-0 border-b-2 border-gray-200 focus:border-blue-500 focus:outline-none bg-transparent"
         />
       </div>
@@ -159,7 +183,6 @@ export default function AddTimer() {
             }}
           >
             <div className="h-24" />
-
             {timeOptions.map((minutes, index) => {
               const isSelected = selectedMinutes === minutes;
               const scale = isSelected ? 'scale-110' : 'scale-100';
@@ -188,16 +211,22 @@ export default function AddTimer() {
                 </div>
               );
             })}
-
             <div className="h-24" />
           </div>
         </div>
       </div>
 
-      {/* 저장 버튼 */}
-      <div className="pb-8">
+      {/* 저장 버튼 - 키보드 위에 고정 */}
+      <div
+        className="w-full left-0 right-0 bg-white "
+        style={{
+          position: 'fixed',
+          bottom: `${keyboardOffset > 0 ? keyboardOffset : 0}px`,
+          transition: 'bottom 0.2s ease',
+        }}
+      >
         <button
-          className={`w-full py-4 rounded-2xl font-medium text-lg transition-colors ${
+          className={`w-full py-4  font-medium text-lg transition-colors ${
             timerName.trim()
               ? 'bg-yellow-300 text-gray-800 hover:bg-yellow-400'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -208,8 +237,6 @@ export default function AddTimer() {
           저장
         </button>
       </div>
-
-      <div className="text-6xl font-bold">{format(remainingSeconds)}</div>
     </div>
   );
 }

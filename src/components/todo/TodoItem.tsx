@@ -58,7 +58,7 @@ export default function TodoItem({
         style={{ x }}
         animate={controls}
         onDragEnd={handleDragEnd}
-        className={`relative z-10 flex items-start gap-2 p-3 rounded-lg bg-gray-100 transition-colors ${
+        className={`relative z-10 flex items-start gap-2 p-3 rounded-lg bg-white transition-colors ${
           checked ? 'text-gray-400 line-through' : ''
         }`}
         onClick={isSwiped ? handleResetSwipe : undefined}

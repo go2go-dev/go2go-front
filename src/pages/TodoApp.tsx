@@ -3,6 +3,7 @@ import TodoSection from '@/components/todo/TodoSection';
 import bgImg from '@/assets/img/bgImage.png';
 import TodoHeader from '@/components/TodoHeader';
 import { useNavigate } from 'react-router-dom';
+import todoChar from '@/assets/gif/todo.gif';
 
 const timerTags = [{ name: '코딩 공부하기' }, { name: '디자인 스터디하기' }, { name: '운동하기' }];
 
@@ -68,7 +69,7 @@ export default function TodoApp() {
   };
 
   return (
-    <div className="relative min-h-screen pb-24 bg-white">
+    <div className="relative min-h-screen pb-24 bg-100">
       {/* Header */}
       <TodoHeader
         title="먼지 치우기"
@@ -76,14 +77,14 @@ export default function TodoApp() {
         onRightClick={startAdding}
       />
 
-      <img src={bgImg} alt="먼지치우기배경" className="w-full" />
+      <img src={todoChar} alt="먼지치우기배경" className="w-full" />
       {/* Todo Sections */}
 
       {/* 상단에 입력 중인 아이템 */}
       {isAdding && (
         <>
           {/* 입력창 */}
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-gray-100">
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-white">
             <div className="w-5 h-5 min-w-5 min-h-5 bg-gray-200 rounded-md" />
             <input
               ref={inputRef}

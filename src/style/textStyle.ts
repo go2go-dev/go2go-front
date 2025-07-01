@@ -4,6 +4,10 @@ const textStylesPlugin = ({ addUtilities }: any) => {
       fontSize: '48px',
       fontWeight: 600,
     },
+    '.title-h1': {
+      fontSize: '32px',
+      fontWeight: 600,
+    },
     '.text-h2': {
       fontSize: '24px',
       fontWeight: 600,
