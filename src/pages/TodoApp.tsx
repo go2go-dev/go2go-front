@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import TodoSection from '@/components/todo/TodoSection';
-import bgImg from '@/assets/img/bgImage.png';
 import TodoHeader from '@/components/TodoHeader';
 import { useNavigate } from 'react-router-dom';
 import todoChar from '@/assets/gif/todo.gif';

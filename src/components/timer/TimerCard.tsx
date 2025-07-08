@@ -12,16 +12,6 @@ interface TimerCardProps {
   timer: Timer;
 }
 
-const formatTime = (minutes: number): string => {
-  if (minutes < 60) {
-    return `${minutes}분`;
-  } else {
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return remainingMinutes === 0 ? `${hours}시간` : `${hours}시간 ${remainingMinutes}분`;
-  }
-};
-
 export default function TimerCard({ timer }: TimerCardProps) {
   const { mutate: startTimer, isPending: isStarting } = useStartTimer();
   const { mutate: deleteTimer, isPending: isDeleting } = useDeleteTimer(); // 추가
