@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router-dom';
 import { ErrorBoundary } from 'react-error-boundary';
 import { router } from './router';
 import FallbackUI from './pages/FallbackUI';
 import Loading from './pages/Loading/Loading';
-import { Suspense } from 'react';
 
-// 토큰 확인용 디버그 컴포넌트
+const queryClient = new QueryClient();
+
 const TokenDebugPanel = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [tokenReceived, setTokenReceived] = useState(false);
@@ -16,12 +16,6 @@ const TokenDebugPanel = () => {
   const checkStoredTokens = () => {
     const accessToken = localStorage.getItem('accessToken');
     const refreshToken = localStorage.getItem('refreshToken');
-
-    console.log('저장된 토큰 확인:', {
-      accessToken: accessToken ? `${accessToken.substring(0, 20)}...` : null,
-      refreshToken: refreshToken ? `${refreshToken.substring(0, 20)}...` : null,
-    });
-
     return { accessToken, refreshToken };
   };
 
@@ -30,10 +24,8 @@ const TokenDebugPanel = () => {
     localStorage.removeItem('refreshToken');
     setTokenReceived(false);
     setLastReceivedTime(null);
-    console.log('토큰 삭제 완료');
   };
 
-  // 컴포넌트 마운트 시 기존 토큰 확인
   useEffect(() => {
     const { accessToken, refreshToken } = checkStoredTokens();
     if (accessToken && refreshToken) {
@@ -41,20 +33,18 @@ const TokenDebugPanel = () => {
     }
   }, []);
 
-  // 토큰 수신 이벤트 리스너
   useEffect(() => {
     const handleTokenReceived = () => {
       setTokenReceived(true);
       setLastReceivedTime(new Date().toLocaleTimeString());
     };
-
-    // localStorage 변화 감지 (같은 탭에서는 발생하지 않으므로 custom event 사용)
     window.addEventListener('tokensReceived', handleTokenReceived);
-
     return () => {
       window.removeEventListener('tokensReceived', handleTokenReceived);
     };
   }, []);
+
+  const { accessToken, refreshToken } = checkStoredTokens();
 
   if (!isVisible) {
     return (
@@ -68,8 +58,6 @@ const TokenDebugPanel = () => {
       </div>
     );
   }
-
-  const { accessToken, refreshToken } = checkStoredTokens();
 
   return (
     <div className="fixed top-4 right-4 z-50 bg-white border border-gray-300 rounded-lg p-4 shadow-lg max-w-sm">
@@ -87,20 +75,18 @@ const TokenDebugPanel = () => {
           ></span>
           <span>토큰 수신: {tokenReceived ? '완료' : '대기중'}</span>
         </div>
-
         {lastReceivedTime && <div className="text-gray-600">마지막 수신: {lastReceivedTime}</div>}
 
         <div className="border-t pt-2">
           <div className="mb-1">Access Token:</div>
           <div className="bg-gray-100 p-1 rounded text-xs break-all">
-            {accessToken ? `${accessToken.substring(0, 30)}...` : '없음'}
+            {accessToken ? `${accessToken.slice(0, 30)}...` : '없음'}
           </div>
         </div>
-
         <div>
           <div className="mb-1">Refresh Token:</div>
           <div className="bg-gray-100 p-1 rounded text-xs break-all">
-            {refreshToken ? `${refreshToken.substring(0, 30)}...` : '없음'}
+            {refreshToken ? `${refreshToken.slice(0, 30)}...` : '없음'}
           </div>
         </div>
 
@@ -124,50 +110,39 @@ const TokenDebugPanel = () => {
 };
 
 function App() {
-  const queryClient = new QueryClient();
-
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       try {
+        if (event.origin !== 'null') {
+          console.log('[Web] 무시된 메시지 origin:', event.origin);
+          return;
+        }
+
         const data = JSON.parse(event.data);
-        console.log('[WebView] 수신된 데이터:', data);
+        console.log('[Web] 수신된 메시지:', data);
 
         const { accessToken, refreshToken } = data;
-
         if (accessToken && refreshToken) {
           localStorage.setItem('accessToken', accessToken);
           localStorage.setItem('refreshToken', refreshToken);
-          console.log('[WebView] 토큰 저장 완료', {
-            accessToken: `${accessToken.substring(0, 20)}...`,
-            refreshToken: `${refreshToken.substring(0, 20)}...`,
-          });
+          console.log('[Web] 토큰 저장 완료');
 
-          // 토큰 수신 이벤트 발생
           window.dispatchEvent(new CustomEvent('tokensReceived'));
-
-          // ✅ 로그인 완료 후 홈으로 이동
           window.location.href = '/home';
         }
       } catch (error) {
-        console.error('[WebView] 메시지 파싱 실패:', error);
-        console.log('[WebView] 원본 데이터:', event.data);
+        console.error('[Web] 메시지 파싱 실패:', error);
       }
     };
 
-    // PostMessage 이벤트 리스너 등록
     window.addEventListener('message', handleMessage);
-
-    // React Native WebView에서 오는 메시지도 처리
-    document.addEventListener('message', handleMessage as any);
-
     return () => {
       window.removeEventListener('message', handleMessage);
-      document.removeEventListener('message', handleMessage as any);
     };
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans antialiased">
+    <div className="min-h-screen bg-gray-50">
       <QueryClientProvider client={queryClient}>
         <QueryErrorResetBoundary>
           {({ reset }) => (
