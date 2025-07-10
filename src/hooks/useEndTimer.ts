@@ -1,10 +1,11 @@
+import { fetchWithAuth } from '@/api/fetchWithAuth';
 import { useMutation } from '@tanstack/react-query';
 
 export function useEndTimer() {
   const ACCESS_TOKEN = localStorage.getItem('accessToken');
   return useMutation({
     mutationFn: async (timerId: number) => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/timers/${timerId}/end`, {
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_URL}/api/timers/${timerId}/end`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

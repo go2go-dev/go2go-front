@@ -1,3 +1,4 @@
+import { fetchWithAuth } from '@/api/fetchWithAuth';
 import { useQuery } from '@tanstack/react-query';
 
 export function useTimerDetail(timerId?: number) {
@@ -6,7 +7,7 @@ export function useTimerDetail(timerId?: number) {
     queryKey: ['timerDetail', timerId],
     queryFn: async () => {
       if (!timerId) throw new Error('timerId 없음');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/timers/${timerId}`, {
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_URL}/api/timers/${timerId}`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${ACCESS_TOKEN}`,

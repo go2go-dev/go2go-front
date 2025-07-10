@@ -1,4 +1,3 @@
-// hooks/useNativeAuth.ts
 import { useState, useEffect } from 'react';
 
 interface AuthTokens {

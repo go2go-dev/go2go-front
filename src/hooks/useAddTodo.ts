@@ -1,3 +1,4 @@
+import { fetchWithAuth } from '@/api/fetchWithAuth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 type AddTodoRequest = {
@@ -12,7 +13,7 @@ type AddTodoResponse = {
 
 const addTodo = async (data: AddTodoRequest): Promise<AddTodoResponse> => {
   const ACCESS_TOKEN = localStorage.getItem('accessToken');
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/todos`, {
+  const res = await fetchWithAuth(`${import.meta.env.VITE_API_URL}/api/todos`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

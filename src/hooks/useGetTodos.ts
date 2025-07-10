@@ -1,3 +1,4 @@
+import { fetchWithAuth } from '@/api/fetchWithAuth';
 import { useQuery } from '@tanstack/react-query';
 
 export interface TodoItem {
@@ -16,7 +17,7 @@ export interface TodoSectionResponse {
 const getTodos = async (): Promise<TodoSectionResponse[]> => {
   const ACCESS_TOKEN = localStorage.getItem('accessToken');
 
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/todos`, {
+  const res = await fetchWithAuth(`${import.meta.env.VITE_API_URL}/api/todos`, {
     headers: {
       Authorization: `Bearer ${ACCESS_TOKEN}`,
     },
@@ -25,7 +26,7 @@ const getTodos = async (): Promise<TodoSectionResponse[]> => {
   if (!res.ok) throw new Error('할일 목록 불러오기 실패');
 
   const json = await res.json();
-  return json.result; // ✅ 여기!
+  return json.result; 
 };
 
 export function useGetTodos() {

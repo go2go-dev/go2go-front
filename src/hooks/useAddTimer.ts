@@ -1,3 +1,4 @@
+import { fetchWithAuth } from '@/api/fetchWithAuth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export function useAddTimer() {
@@ -5,7 +6,7 @@ export function useAddTimer() {
   const ACCESS_TOKEN = localStorage.getItem('accessToken');
   return useMutation({
     mutationFn: async ({ name, minutes }: { name: string; minutes: number }) => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/timers`, {
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_URL}/api/timers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

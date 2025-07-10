@@ -1,9 +1,10 @@
 // hooks/useDeleteTimer.ts
+import { fetchWithAuth } from '@/api/fetchWithAuth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 const deleteTimer = async (timerId: number): Promise<void> => {
   const ACCESS_TOKEN = localStorage.getItem('accessToken');
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/timers/${timerId}`, {
+  const response = await fetchWithAuth(`${import.meta.env.VITE_API_URL}/api/timers/${timerId}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
