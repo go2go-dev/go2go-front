@@ -194,8 +194,8 @@ function App() {
           localStorage.setItem('accessToken', accessToken);
           localStorage.setItem('refreshToken', refreshToken);
           console.log('[Web] 토큰 저장 완료', {
-            accessToken: `${accessToken.substring(0, 20)}...`,
-            refreshToken: `${refreshToken.substring(0, 20)}...`,
+            accessToken: `${accessToken}`,
+            refreshToken: `${refreshToken}`,
           });
 
           // 토큰 수신 이벤트 발생
