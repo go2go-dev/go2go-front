@@ -14,6 +14,13 @@ const TokenDebugPanel = () => {
   const [lastReceivedTime, setLastReceivedTime] = useState<string | null>(null);
   const [messageLog, setMessageLog] = useState<string[]>([]);
   const [receivedMethod, setReceivedMethod] = useState<string | null>(null);
+  const [storedTokens, setStoredTokens] = useState<{
+    accessToken: string | null;
+    refreshToken: string | null;
+  }>({
+    accessToken: null,
+    refreshToken: null,
+  });
 
   const addToLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -24,7 +31,6 @@ const TokenDebugPanel = () => {
   const checkStoredTokens = () => {
     const accessToken = localStorage.getItem('accessToken');
     const refreshToken = localStorage.getItem('refreshToken');
-
     addToLog(`토큰 확인: ${accessToken ? '있음' : '없음'}`);
     return { accessToken, refreshToken };
   };
@@ -35,15 +41,17 @@ const TokenDebugPanel = () => {
     setTokenReceived(false);
     setLastReceivedTime(null);
     setReceivedMethod(null);
+    setStoredTokens({ accessToken: null, refreshToken: null });
     addToLog('토큰 삭제 완료');
   };
 
   useEffect(() => {
-    const { accessToken, refreshToken } = checkStoredTokens();
-    if (accessToken && refreshToken) {
+    const tokens = checkStoredTokens();
+    if (tokens.accessToken && tokens.refreshToken) {
       setTokenReceived(true);
       setReceivedMethod('기존 저장됨');
     }
+    setStoredTokens(tokens);
   }, []);
 
   useEffect(() => {
@@ -54,6 +62,7 @@ const TokenDebugPanel = () => {
 
       const method = event.detail?.method || '커스텀 이벤트';
       setReceivedMethod(method);
+      setStoredTokens(checkStoredTokens());
       addToLog(`${method}로 토큰 수신 완료`);
     };
 
@@ -62,8 +71,6 @@ const TokenDebugPanel = () => {
       window.removeEventListener('tokensReceived', handleTokenReceived);
     };
   }, []);
-
-  const { accessToken, refreshToken } = checkStoredTokens();
 
   if (!isVisible) {
     return (
@@ -93,24 +100,23 @@ const TokenDebugPanel = () => {
         <div className="flex items-center gap-2">
           <span
             className={`w-3 h-3 rounded-full ${tokenReceived ? 'bg-green-500' : 'bg-red-500'}`}
-          ></span>
+          />
           <span>토큰 수신: {tokenReceived ? '완료' : '대기중'}</span>
         </div>
 
         {receivedMethod && <div className="text-blue-600">수신 방법: {receivedMethod}</div>}
-
         {lastReceivedTime && <div className="text-gray-600">마지막 수신: {lastReceivedTime}</div>}
 
         <div className="border-t pt-2">
           <div className="mb-1">Access Token:</div>
           <div className="bg-gray-100 p-1 rounded text-xs break-all">
-            {accessToken ? `${accessToken.slice(0, 30)}...` : '없음'}
+            {storedTokens.accessToken ? `${storedTokens.accessToken.slice(0, 30)}...` : '없음'}
           </div>
         </div>
         <div>
           <div className="mb-1">Refresh Token:</div>
           <div className="bg-gray-100 p-1 rounded text-xs break-all">
-            {refreshToken ? `${refreshToken.slice(0, 30)}...` : '없음'}
+            {storedTokens.refreshToken ? `${storedTokens.refreshToken.slice(0, 30)}...` : '없음'}
           </div>
         </div>
 
@@ -129,7 +135,10 @@ const TokenDebugPanel = () => {
 
         <div className="flex gap-2 pt-2">
           <button
-            onClick={checkStoredTokens}
+            onClick={() => {
+              const tokens = checkStoredTokens();
+              setStoredTokens(tokens);
+            }}
             className="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
           >
             새로고침
@@ -157,27 +166,15 @@ function App() {
       });
 
       try {
-        // ❌ 기존: origin 체크가 너무 엄격함
-        // if (event.origin !== 'null') {
-        //   console.log('[Web] 무시된 메시지 origin:', event.origin);
-        //   return;
-        // }
-
-        // ✅ 수정: React Native WebView 메시지만 허용하도록 완화
         const isFromReactNative =
           event.origin === 'null' ||
           event.origin === 'file://' ||
           event.origin === '' ||
           !event.origin;
 
-        console.log('[Web] Origin 체크:', {
-          origin: event.origin,
-          isFromReactNative,
-        });
+        console.log('[Web] Origin 체크:', { origin: event.origin, isFromReactNative });
 
         let data;
-
-        // 데이터 파싱 시도
         if (typeof event.data === 'string') {
           data = JSON.parse(event.data);
         } else if (typeof event.data === 'object') {
@@ -193,19 +190,12 @@ function App() {
         if (accessToken && refreshToken) {
           localStorage.setItem('accessToken', accessToken);
           localStorage.setItem('refreshToken', refreshToken);
-          console.log('[Web] 토큰 저장 완료', {
-            accessToken: `${accessToken.substring(0, 20)}...`,
-            refreshToken: `${refreshToken.substring(0, 20)}...`,
-          });
+          console.log('[Web] 토큰 저장 완료');
 
-          // 토큰 수신 이벤트 발생
           window.dispatchEvent(
-            new CustomEvent('tokensReceived', {
-              detail: { method: 'postMessage' },
-            }),
+            new CustomEvent('tokensReceived', { detail: { method: 'postMessage' } }),
           );
 
-          // 홈으로 리다이렉트
           setTimeout(() => {
             window.location.href = '/home';
           }, 500);
@@ -218,7 +208,6 @@ function App() {
       }
     };
 
-    // 전역 함수로 토큰 수신 (React Native에서 직접 호출 가능)
     (window as any).receiveTokensFromRN = (tokensString: string) => {
       console.log('[Web] 전역 함수로 토큰 수신:', tokensString);
       try {
@@ -231,9 +220,7 @@ function App() {
           console.log('[Web] 전역 함수로 토큰 저장 완료');
 
           window.dispatchEvent(
-            new CustomEvent('tokensReceived', {
-              detail: { method: '전역함수' },
-            }),
+            new CustomEvent('tokensReceived', { detail: { method: '전역함수' } }),
           );
 
           setTimeout(() => {
@@ -245,11 +232,9 @@ function App() {
       }
     };
 
-    // 다양한 이벤트 리스너 등록
     window.addEventListener('message', handleMessage);
     document.addEventListener('message', handleMessage as any);
 
-    // React Native 환경 감지 로그
     console.log('[Web] 환경 정보:', {
       userAgent: navigator.userAgent,
       hasReactNativeWebView: !!(window as any).ReactNativeWebView,
