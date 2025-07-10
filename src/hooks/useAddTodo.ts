@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 type AddTodoRequest = {
-  timerId: number;
+  timerId?: number;
   content: string;
 };
 
@@ -18,7 +18,10 @@ const addTodo = async (data: AddTodoRequest): Promise<AddTodoResponse> => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${ACCESS_TOKEN}`,
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify({
+      content: data.content,
+      ...(data.timerId !== undefined && { timerId: data.timerId }),
+    }),
   });
 
   if (!res.ok) throw new Error('할일 추가 실패');
@@ -31,10 +34,11 @@ export function useAddTodo() {
   return useMutation({
     mutationFn: addTodo,
     onSuccess: (data, variables) => {
-      // 성공 시 해당 타이머의 상세 정보 쿼리 무효화
-      queryClient.invalidateQueries({
-        queryKey: ['timerDetail', variables.timerId],
-      });
+      if (variables?.timerId !== undefined) {
+        queryClient.invalidateQueries({
+          queryKey: ['timerDetail', variables.timerId],
+        });
+      }
 
       console.log('할일 추가 성공:', data);
     },
