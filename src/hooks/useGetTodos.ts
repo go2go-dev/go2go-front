@@ -18,6 +18,7 @@ const getTodos = async (): Promise<TodoSectionResponse[]> => {
   const ACCESS_TOKEN = localStorage.getItem('accessToken');
 
   const res = await fetchWithAuth(`${import.meta.env.VITE_API_URL}/api/todos`, {
+    method: 'GET',
     headers: {
       Authorization: `Bearer ${ACCESS_TOKEN}`,
     },
@@ -26,7 +27,7 @@ const getTodos = async (): Promise<TodoSectionResponse[]> => {
   if (!res.ok) throw new Error('할일 목록 불러오기 실패');
 
   const json = await res.json();
-  return json.result; 
+  return json.result;
 };
 
 export function useGetTodos() {

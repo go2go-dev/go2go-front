@@ -1,7 +1,7 @@
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { TimerIcon, Trash2 } from 'lucide-react';
 import { CheckIcon } from '@radix-ui/react-icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useAnimation, type PanInfo, AnimatePresence } from 'framer-motion';
 import { useDeleteTodo } from '@/hooks/useDeleteTodo';
 import { useToggleTodo } from '@/hooks/useToggleTodo';
@@ -12,6 +12,7 @@ interface TodoItemProps {
   isChecked?: boolean;
   isTag?: boolean;
   timerName?: string;
+  timerId?: number; // timerId 추가
   onDelete?: () => void;
 }
 
@@ -21,6 +22,7 @@ export default function TodoItem({
   isChecked = false,
   isTag = false,
   timerName,
+  timerId,
   onDelete,
 }: TodoItemProps) {
   const [checked, setChecked] = useState(isChecked);
@@ -29,7 +31,13 @@ export default function TodoItem({
   const x = useMotionValue(0);
   const controls = useAnimation();
   const deleteTodoMutation = useDeleteTodo();
-  const toggleTodoMutation = useToggleTodo();
+  const toggleTodoMutation = useToggleTodo(timerId); // timerId 전달
+
+  // isChecked prop이 변경될 때 checked state 동기화
+  useEffect(() => {
+    console.log(`Todo ${todoId}: isChecked=${isChecked}, current checked=${checked}`);
+    setChecked(isChecked);
+  }, [isChecked, todoId]);
 
   const handleDragEnd = (_: any, info: PanInfo) => {
     if (info.offset.x < -60) {
@@ -47,27 +55,17 @@ export default function TodoItem({
   };
 
   const handleDelete = async () => {
-    // 삭제 애니메이션 시작
     setIsDeleting(true);
-
-    // 약간의 지연 후 실제 삭제 API 호출
     setTimeout(() => {
       deleteTodoMutation.mutate(todoId);
       onDelete?.();
-    }, 400); // 애니메이션 시간과 맞춤
+    }, 400);
   };
 
   const handleToggleCheck = (newChecked: boolean) => {
-    // 즉시 UI 업데이트 (낙관적 업데이트)
-    setChecked(newChecked);
-
-    // API 호출
-    toggleTodoMutation.mutate(todoId, {
-      onError: () => {
-        // 실패 시 이전 상태로 되돌리기
-        setChecked(!newChecked);
-      },
-    });
+    // React Query의 optimistic update가 알아서 처리하므로
+    // 여기서는 단순히 mutation만 호출
+    toggleTodoMutation.mutate(todoId);
   };
 
   return (
@@ -113,27 +111,37 @@ export default function TodoItem({
             onDragEnd={handleDragEnd}
             className={`relative z-10 flex items-start gap-2 p-3 rounded-lg bg-white transition-colors ${
               checked ? 'text-gray-400 line-through' : ''
-            }`}
+            } ${toggleTodoMutation.isPending ? 'opacity-60' : ''}`}
             onClick={isSwiped ? handleResetSwipe : undefined}
             whileHover={{ scale: 1.01 }}
             transition={{ type: 'spring', stiffness: 300 }}
           >
             <Checkbox.Root
-              className="w-5 h-5 min-w-5 min-h-5 rounded-md flex items-center justify-center
+              className={`w-5 h-5 min-w-5 min-h-5 rounded-md flex items-center justify-center
                 bg-gray-200 data-[state=checked]:bg-[#23263B]
-                appearance-none outline-none border-none transition-colors relative"
+                appearance-none outline-none border-none transition-colors relative
+                ${toggleTodoMutation.isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               checked={checked}
               onCheckedChange={(v) => handleToggleCheck(!!v)}
+              disabled={toggleTodoMutation.isPending}
               id={text}
             >
               <Checkbox.Indicator>
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 500, delay: 0.1 }}
-                >
-                  <CheckIcon className="w-4 h-4 text-white" />
-                </motion.div>
+                {toggleTodoMutation.isPending ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    className="w-3 h-3 border-2 border-white border-t-transparent rounded-full"
+                  />
+                ) : (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, delay: 0.1 }}
+                  >
+                    <CheckIcon className="w-4 h-4 text-white" />
+                  </motion.div>
+                )}
               </Checkbox.Indicator>
             </Checkbox.Root>
 

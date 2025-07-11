@@ -37,6 +37,7 @@ export function useAddTodo() {
     onSuccess: (data, variables) => {
       if (variables?.timerId !== undefined) {
         queryClient.invalidateQueries({ queryKey: ['todos'] });
+        queryClient.invalidateQueries({ queryKey: ['timerDetail'] });
       }
 
       console.log('할일 추가 성공:', data);
