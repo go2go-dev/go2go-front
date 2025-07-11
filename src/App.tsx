@@ -75,14 +75,14 @@ const TokenDebugPanel = () => {
   if (!isVisible) {
     return (
       <div className="fixed top-4 right-4 z-50">
-        <button
+        {/* <button
           onClick={() => setIsVisible(true)}
           className={`px-3 py-1 rounded text-sm text-white ${
             tokenReceived ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'
           }`}
         >
           🔧 디버그 {tokenReceived ? '✅' : '⏳'}
-        </button>
+        </button> */}
       </div>
     );
   }
