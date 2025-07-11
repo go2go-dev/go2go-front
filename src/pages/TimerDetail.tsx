@@ -156,7 +156,6 @@ export default function TimerDetail() {
 
   // 실제 타이머 이름과 분 (API 데이터 우선, fallback으로 location.state 사용)
   const timerName = data?.result?.name || name || '타이머';
-  const timerMinutes = data?.result?.minutes || minutes || 0;
 
   // TODO 리스트가 있는지 확인
   const hasTodos = data?.result?.todoList && data.result.todoList.length > 0;
@@ -222,7 +221,7 @@ export default function TimerDetail() {
           drag="y"
           dragConstraints={{ top: 0, bottom: 0 }}
           dragElastic={0.1}
-          onDragEnd={(event, info) => {
+          onDragEnd={(_, info) => {
             const shouldExpand = info.velocity.y < -500 || info.offset.y < -50;
             const shouldCollapse = info.velocity.y > 500 || info.offset.y > 50;
 

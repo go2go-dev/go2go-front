@@ -90,7 +90,7 @@ export const useToggleTodo = (timerId?: number) => {
     },
 
     // ❌ 실패 시: 이전 상태로 롤백
-    onError: (error, todoId, context) => {
+    onError: (_error, _todoId, context) => {
       // 백업된 데이터로 롤백
       if (context?.previousTimerData && timerId) {
         queryClient.setQueryData(['timerDetail', timerId], context.previousTimerData);

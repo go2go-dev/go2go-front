@@ -62,7 +62,7 @@ export default function TodoItem({
     }, 400);
   };
 
-  const handleToggleCheck = (newChecked: boolean) => {
+  const handleToggleCheck = () => {
     // React Query의 optimistic update가 알아서 처리하므로
     // 여기서는 단순히 mutation만 호출
     toggleTodoMutation.mutate(todoId);
@@ -122,7 +122,7 @@ export default function TodoItem({
                 appearance-none outline-none border-none transition-colors relative
                 ${toggleTodoMutation.isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               checked={checked}
-              onCheckedChange={(v) => handleToggleCheck(!!v)}
+              onCheckedChange={handleToggleCheck}
               disabled={toggleTodoMutation.isPending}
               id={text}
             >
