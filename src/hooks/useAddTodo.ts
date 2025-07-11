@@ -36,9 +36,7 @@ export function useAddTodo() {
     mutationFn: addTodo,
     onSuccess: (data, variables) => {
       if (variables?.timerId !== undefined) {
-        queryClient.invalidateQueries({
-          queryKey: ['timerDetail', variables.timerId],
-        });
+        queryClient.invalidateQueries({ queryKey: ['todos'] });
       }
 
       console.log('할일 추가 성공:', data);
