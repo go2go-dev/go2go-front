@@ -186,7 +186,7 @@ function App() {
 
         // 홈으로 리다이렉트
         setTimeout(() => {
-          window.location.href = '/home';
+          window.location.href = '/';
         }, 500);
 
         return true;
