@@ -22,6 +22,15 @@ const TokenDebugPanel = () => {
     refreshToken: null,
   });
 
+  // 웹뷰 환경 감지
+  const isWebView = () => {
+    return (
+      !!(window as any).ReactNativeWebView ||
+      navigator.userAgent.includes('WebView') ||
+      window.location.protocol === 'file:'
+    );
+  };
+
   const addToLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     setMessageLog((prev) => [...prev.slice(-4), `${timestamp}: ${message}`]);
@@ -107,6 +116,8 @@ const TokenDebugPanel = () => {
         {receivedMethod && <div className="text-blue-600">수신 방법: {receivedMethod}</div>}
         {lastReceivedTime && <div className="text-gray-600">마지막 수신: {lastReceivedTime}</div>}
 
+        <div className="text-blue-600">환경: {isWebView() ? '웹뷰' : '일반 웹'}</div>
+
         <div className="border-t pt-2">
           <div className="mb-1">Access Token:</div>
           <div className="bg-gray-100 p-1 rounded text-xs break-all">
@@ -158,8 +169,18 @@ const TokenDebugPanel = () => {
 function App() {
   const [isAppReady, setIsAppReady] = useState(false);
 
+  // 웹뷰 환경 감지
+  const isWebView = () => {
+    return (
+      !!(window as any).ReactNativeWebView ||
+      navigator.userAgent.includes('WebView') ||
+      window.location.protocol === 'file:'
+    );
+  };
+
   useEffect(() => {
     console.log('[Web] App 컴포넌트 마운트됨');
+    console.log('[Web] 환경 감지:', isWebView() ? '웹뷰' : '일반 웹');
 
     // 앱이 완전히 준비되었음을 알리는 함수
     const notifyAppReady = () => {
@@ -184,9 +205,16 @@ function App() {
           (window as any).ReactNativeWebView.postMessage('TOKEN_SAVED_SUCCESS');
         }
 
-        // 홈으로 리다이렉트
+        // 홈으로 리다이렉트 (React Router 방식으로 변경)
         setTimeout(() => {
-          window.location.href = '/';
+          // React Router navigate 사용을 시도, 실패시 window.location 사용
+          try {
+            const event = new CustomEvent('navigateToHome');
+            window.dispatchEvent(event);
+          } catch (error) {
+            console.error('[Web] Navigate 실패, location.href 사용:', error);
+            window.location.href = '/home';
+          }
         }, 500);
 
         return true;
@@ -276,6 +304,7 @@ function App() {
       origin: window.location.origin,
       href: window.location.href,
       readyState: document.readyState,
+      isWebView: isWebView(),
     });
 
     // DOM과 React가 모두 준비되면 React Native에 알림
