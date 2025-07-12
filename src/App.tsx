@@ -75,14 +75,14 @@ const TokenDebugPanel = () => {
   if (!isVisible) {
     return (
       <div className="fixed top-4 right-4 z-50">
-        {/* <button
+        <button
           onClick={() => setIsVisible(true)}
           className={`px-3 py-1 rounded text-sm text-white ${
             tokenReceived ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'
           }`}
         >
           🔧 디버그 {tokenReceived ? '✅' : '⏳'}
-        </button> */}
+        </button>
       </div>
     );
   }
@@ -156,13 +156,58 @@ const TokenDebugPanel = () => {
 };
 
 function App() {
+  const [isAppReady, setIsAppReady] = useState(false);
+
   useEffect(() => {
+    console.log('[Web] App 컴포넌트 마운트됨');
+
+    // 앱이 완전히 준비되었음을 알리는 함수
+    const notifyAppReady = () => {
+      if ((window as any).ReactNativeWebView && !isAppReady) {
+        console.log('[Web] React Native에 준비 완료 신호 전송');
+        (window as any).ReactNativeWebView.postMessage('WEBVIEW_READY');
+        setIsAppReady(true);
+      }
+    };
+
+    // 토큰 처리 함수들
+    const handleTokens = (accessToken: string, refreshToken: string, method: string) => {
+      try {
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        console.log(`[Web] ${method}으로 토큰 저장 완료`);
+
+        window.dispatchEvent(new CustomEvent('tokensReceived', { detail: { method } }));
+
+        // React Native에 성공 신호
+        if ((window as any).ReactNativeWebView) {
+          (window as any).ReactNativeWebView.postMessage('TOKEN_SAVED_SUCCESS');
+        }
+
+        // 홈으로 리다이렉트
+        setTimeout(() => {
+          window.location.href = '/home';
+        }, 500);
+
+        return true;
+      } catch (error) {
+        console.error(`[Web] ${method} 토큰 저장 실패:`, error);
+
+        // React Native에 실패 신호
+        if ((window as any).ReactNativeWebView) {
+          (window as any).ReactNativeWebView.postMessage('TOKEN_SAVED_ERROR');
+        }
+
+        return false;
+      }
+    };
+
+    // postMessage 이벤트 리스너
     const handleMessage = (event: MessageEvent) => {
-      console.log('[Web] 수신된 전체 이벤트:', {
+      console.log('[Web] 수신된 postMessage:', {
         origin: event.origin,
         data: event.data,
-        source: event.source,
-        type: event.type,
+        type: typeof event.data,
       });
 
       try {
@@ -172,7 +217,10 @@ function App() {
           event.origin === '' ||
           !event.origin;
 
-        console.log('[Web] Origin 체크:', { origin: event.origin, isFromReactNative });
+        if (!isFromReactNative) {
+          console.log('[Web] React Native가 아닌 소스에서 메시지:', event.origin);
+          return;
+        }
 
         let data;
         if (typeof event.data === 'string') {
@@ -188,26 +236,17 @@ function App() {
 
         const { accessToken, refreshToken } = data;
         if (accessToken && refreshToken) {
-          localStorage.setItem('accessToken', accessToken);
-          localStorage.setItem('refreshToken', refreshToken);
-          console.log('[Web] 토큰 저장 완료');
-
-          window.dispatchEvent(
-            new CustomEvent('tokensReceived', { detail: { method: 'postMessage' } }),
-          );
-
-          setTimeout(() => {
-            window.location.href = '/home';
-          }, 500);
+          handleTokens(accessToken, refreshToken, 'postMessage');
         } else {
           console.log('[Web] 토큰이 없는 메시지:', data);
         }
       } catch (error) {
-        console.error('[Web] 메시지 파싱 실패:', error);
+        console.error('[Web] postMessage 파싱 실패:', error);
         console.log('[Web] 원본 데이터:', event.data);
       }
     };
 
+    // 전역 함수 정의
     (window as any).receiveTokensFromRN = (tokensString: string) => {
       console.log('[Web] 전역 함수로 토큰 수신:', tokensString);
       try {
@@ -215,39 +254,60 @@ function App() {
         const { accessToken, refreshToken } = data;
 
         if (accessToken && refreshToken) {
-          localStorage.setItem('accessToken', accessToken);
-          localStorage.setItem('refreshToken', refreshToken);
-          console.log('[Web] 전역 함수로 토큰 저장 완료');
-
-          window.dispatchEvent(
-            new CustomEvent('tokensReceived', { detail: { method: '전역함수' } }),
-          );
-
-          setTimeout(() => {
-            window.location.href = '/home';
-          }, 500);
+          handleTokens(accessToken, refreshToken, '전역함수');
         }
       } catch (error) {
         console.error('[Web] 전역 함수 토큰 파싱 실패:', error);
+
+        if ((window as any).ReactNativeWebView) {
+          (window as any).ReactNativeWebView.postMessage('TOKEN_SAVED_ERROR');
+        }
       }
     };
 
+    // 이벤트 리스너 등록
     window.addEventListener('message', handleMessage);
     document.addEventListener('message', handleMessage as any);
 
+    // 환경 정보 로그
     console.log('[Web] 환경 정보:', {
       userAgent: navigator.userAgent,
       hasReactNativeWebView: !!(window as any).ReactNativeWebView,
       origin: window.location.origin,
       href: window.location.href,
+      readyState: document.readyState,
     });
+
+    // DOM과 React가 모두 준비되면 React Native에 알림
+    const checkAndNotify = () => {
+      if (document.readyState === 'complete' && document.querySelector('#root')) {
+        console.log('[Web] DOM과 React 모두 준비 완료');
+        notifyAppReady();
+      }
+    };
+
+    // 즉시 체크
+    checkAndNotify();
+
+    // DOM 로드 완료 이벤트
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', checkAndNotify);
+    }
+
+    // 약간의 지연 후 한 번 더 체크 (React 렌더링 완료 대기)
+    const timeoutId = setTimeout(() => {
+      console.log('[Web] 지연 후 준비 상태 재확인');
+      notifyAppReady();
+    }, 1000);
 
     return () => {
       window.removeEventListener('message', handleMessage);
       document.removeEventListener('message', handleMessage as any);
+      document.removeEventListener('DOMContentLoaded', checkAndNotify);
       delete (window as any).receiveTokensFromRN;
+      clearTimeout(timeoutId);
     };
-  }, []);
+  }, [isAppReady]);
 
   return (
     <div className="min-h-screen bg-gray-50">
