@@ -1,13 +1,16 @@
 import SettingItem from '@/components/setting/SettingItem';
 import { ArrowLeft, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Setting() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen">
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="flex items-center justify-between px-4 py-3">
-          <button className="p-2 -ml-2">
+          <button className="p-2 -ml-2" onClick={() => navigate('/')}>
             <ArrowLeft className="w-6 h-6 text-gray-700" />
           </button>
           <h1 className="text-lg font-medium text-gray-900">설정</h1>
