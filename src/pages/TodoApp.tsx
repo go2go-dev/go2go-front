@@ -27,16 +27,26 @@ export default function TodoApp() {
         .replace(/\. /g, '. ')
         .replace('.', '.'),
       todos: section.todos.map((todo) => ({
-        todoId: todo.todoId, // ✅ 추가
+        todoId: todo.todoId,
         text: todo.content,
         isChecked: todo.isDone,
         isTag: !!todo.timerName,
-        timerName: todo.timerName, // ✅ 추가
+        timerName: todo.timerName,
+        timerId: todo.timerId, // timerId 추가
       })),
     })) ?? [];
 
+  // ✅ 타이머 선택이 선택사항이므로 undefined 허용
   const handleAddTodo = (content: string, timerId?: number) => {
-    addTodoMutation.mutate({ content, timerId: timerId ?? 0 });
+    console.log('할일 추가:', { content, timerId }); // 디버깅용
+
+    // timerId가 있을 때만 포함하여 요청
+    if (timerId) {
+      addTodoMutation.mutate({ content, timerId });
+    } else {
+      // timerId가 없으면 content만 보내기
+      addTodoMutation.mutate({ content });
+    }
   };
 
   const handleAddButtonClick = () => {
@@ -68,6 +78,7 @@ export default function TodoApp() {
           )}
         </>
       )}
+
       {isLoading && <p className="p-4 text-center text-gray-500">불러오는 중...</p>}
       {error && <p className="p-4 text-center text-red-500">에러가 발생했어요.</p>}
 

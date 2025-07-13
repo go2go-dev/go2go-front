@@ -1,5 +1,5 @@
 const textStylesPlugin = ({ addUtilities }: any) => {
-	const textStyles = {
+  const textStyles = {
     '.text-h1': {
       fontSize: '48px',
       fontWeight: 600,
@@ -28,6 +28,10 @@ const textStylesPlugin = ({ addUtilities }: any) => {
       fontSize: '12px',
       fontWeight: 400,
     },
+    '.text-body5': {
+      fontSize: '12px',
+      fontWeight: 600,
+    },
     '.text-button': {
       fontSize: '14px',
     },
@@ -54,7 +58,7 @@ const textStylesPlugin = ({ addUtilities }: any) => {
     },
   };
 
-	addUtilities(textStyles);
+  addUtilities(textStyles);
 };
 
 export default textStylesPlugin;
