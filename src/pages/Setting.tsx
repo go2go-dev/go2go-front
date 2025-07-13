@@ -35,8 +35,13 @@ export default function Setting() {
             <h2 className="text-sm font-medium text-gray-500">전체</h2>
           </div>
           <div className="bg-white mt-2 divide-y divide-gray-100">
-            <SettingItem title="개인정보처리방침" />
-            <SettingItem title="서비스 이용약관" />
+            <SettingItem title="개인정보처리방침" 
+            onClick={() => window.open('https://gratis-newsstand-285.notion.site/219b56b97792804f9583e6592ccd8d16', '_blank')}
+            />
+            <SettingItem title="서비스 이용약관" 
+            onClick={() => window.open('https://gratis-newsstand-285.notion.site/219b56b9779280199f85de8ee21dc395?source=copy_link', '_blank')}
+          
+            />
           </div>
         </div>
 
