@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { CheckIcon } from '@radix-ui/react-icons';
+import CharacterSVG from '@/assets/svg/todoTimer.svg?react';
+
 
 interface TodoInputBarProps {
   onClose?: () => void;
@@ -127,11 +129,13 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
                   onClick={() => setSelectedTimerId(timer.timerId)}
                   className={`min-w-fit px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors duration-200 ${
                     selectedTimerId === timer.timerId
-                      ? 'bg-yellow-400 text-gray-800'
-                      : 'bg-yellow-100 text-gray-700 hover:bg-yellow-200'
+                      ? 'bg-subYellow text-black outline outline-1 outline-white outline-offset-[-1px]'
+                      : 'bg-300 text-700 hover:bg-yellow-200 outline outline-1 outline-white outline-offset-[-1px]'
                   }`}
                 >
-                  <span className="flex items-center gap-1">⏱ {timer.name}</span>
+                  <span className="flex items-center gap-1">
+                      <CharacterSVG className="w-4 h-4" />
+                     {timer.name}</span>
                 </motion.button>
               ))}
             </div>

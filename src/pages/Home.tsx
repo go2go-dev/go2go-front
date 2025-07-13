@@ -28,7 +28,8 @@ export default function TimerApp() {
       {/* 헤더 */}
       <div className="flex justify-between items-center pb-5 pt-4">
         <h1 className="text-h2 text-black">타이머</h1>
-        <User className="w-6 h-6 text-gray-600" />
+        <User onClick={() => navigate('/setting')}
+          className="w-6 h-6 text-gray-600" />
       </div>
 
       {/* 타이머 리스트 영역 - 스크롤 가능한 고정 높이 */}
