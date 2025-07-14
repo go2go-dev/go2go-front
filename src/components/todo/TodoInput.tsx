@@ -41,7 +41,6 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
   const handleSubmit = () => {
     if (!inputValue.trim()) return;
 
-    // ✅ 타이머가 선택되지 않았으면 undefined 전달
     onSubmit?.(inputValue.trim(), selectedTimerId || undefined);
     setInputValue('');
     setSelectedTimerId(null);
@@ -49,14 +48,18 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
     onClose?.();
   };
 
-  // ✅ 타이머 선택 시 키보드 포커스 유지
-  const handleTimerSelect = (timerId: number) => {
+  // ✅ 타이머 선택 시 키보드 유지
+  const handleTimerSelect = (timerId: number, event: React.MouseEvent) => {
+    // 기본 동작 방지 (포커스 이동 방지)
+    event.preventDefault();
+    event.stopPropagation();
+
     setSelectedTimerId(timerId);
 
-    // 타이머 선택 후 즉시 input에 포커스 다시 주기
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 0);
+    // input 포커스 즉시 복원
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   return (
@@ -74,7 +77,6 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
         className="mb-4"
         ref={containerRef}
       >
-        {/* TodoItem과 동일한 스타일의 카드 */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -104,30 +106,38 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="할 일을 적어주세요"
               className="w-full text-base focus:text-base border-0 outline-none bg-transparent placeholder-gray-400"
+              // ✅ 키보드 "완료" 버튼 제거 및 키보드 최적화
+              inputMode="text"
+              enterKeyHint="done"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
+                  e.preventDefault(); // 기본 엔터 동작 방지
                   handleSubmit();
                 }
                 if (e.key === 'Escape') {
                   onClose?.();
                 }
               }}
-              // ✅ input blur 방지 (타이머 버튼 클릭해도 포커스 유지)
+              // ✅ blur 방지 강화
               onBlur={(e) => {
-                // 타이머 버튼 클릭으로 인한 blur인지 확인
+                // 타이머 버튼이나 다른 내부 요소 클릭으로 인한 blur 방지
                 const relatedTarget = e.relatedTarget as HTMLElement;
-                if (relatedTarget?.closest('[data-timer-button]')) {
-                  // 타이머 버튼 클릭이면 포커스 다시 주기
-                  setTimeout(() => {
+                if (!relatedTarget || containerRef.current?.contains(relatedTarget)) {
+                  // 컨테이너 내부 클릭이면 포커스 유지
+                  requestAnimationFrame(() => {
                     inputRef.current?.focus();
-                  }, 0);
+                  });
                 }
               }}
             />
           </div>
         </motion.div>
 
-        {/* 타이머 태그들 (카드 밖) */}
+        {/* 타이머 태그들 */}
         {Array.isArray(timers) && timers.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -152,9 +162,14 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
                     duration: 0.2,
                   }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => handleTimerSelect(timer.timerId)}
-                  // ✅ 타이머 버튼임을 표시 (blur 이벤트에서 감지용)
-                  data-timer-button
+                  // ✅ 키보드 유지를 위한 이벤트 처리
+                  onMouseDown={(e) => {
+                    e.preventDefault(); // 기본 포커스 이동 방지
+                  }}
+                  onClick={(e) => handleTimerSelect(timer.timerId, e)}
+                  // ✅ 탭 포커스 방지
+                  tabIndex={-1}
+                  type="button"
                   className={`min-w-fit px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors duration-200 ${
                     selectedTimerId === timer.timerId
                       ? 'bg-subYellow text-black outline outline-1 outline-white outline-offset-[-1px]'

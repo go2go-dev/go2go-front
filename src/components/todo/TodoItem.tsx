@@ -12,7 +12,7 @@ interface TodoItemProps {
   isChecked?: boolean;
   isTag?: boolean;
   timerName?: string;
-  timerId?: number; // timerId 추가
+  timerId?: number;
   onDelete?: () => void;
 }
 
@@ -31,9 +31,8 @@ export default function TodoItem({
   const x = useMotionValue(0);
   const controls = useAnimation();
   const deleteTodoMutation = useDeleteTodo();
-  const toggleTodoMutation = useToggleTodo(timerId); // timerId 전달
+  const toggleTodoMutation = useToggleTodo(timerId);
 
-  // isChecked prop이 변경될 때 checked state 동기화
   useEffect(() => {
     console.log(`Todo ${todoId}: isChecked=${isChecked}, current checked=${checked}`);
     setChecked(isChecked);
@@ -63,8 +62,6 @@ export default function TodoItem({
   };
 
   const handleToggleCheck = () => {
-    // React Query의 optimistic update가 알아서 처리하므로
-    // 여기서는 단순히 mutation만 호출
     toggleTodoMutation.mutate(todoId);
   };
 
@@ -102,7 +99,7 @@ export default function TodoItem({
             )}
           </div>
 
-          {/* 할일 카드 (포그라운드) */}
+          {/* 할일 카드 (포그라운드) - line-through 제거 */}
           <motion.div
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
@@ -110,7 +107,7 @@ export default function TodoItem({
             animate={controls}
             onDragEnd={handleDragEnd}
             className={`relative z-10 flex items-start gap-2 p-3 rounded-lg bg-white transition-colors ${
-              checked ? 'text-gray-400 line-through' : ''
+              checked ? 'text-gray-400' : '' // line-through 제거, text-gray-400만 유지
             } ${toggleTodoMutation.isPending ? 'opacity-60' : ''}`}
             onClick={isSwiped ? handleResetSwipe : undefined}
             whileHover={{ scale: 1.01 }}
@@ -146,6 +143,7 @@ export default function TodoItem({
             </Checkbox.Root>
 
             <div className="text-sm flex-1 whitespace-pre-wrap">
+              {/* 타이머 태그 - 체크 상태와 관계없이 동일한 스타일 유지 */}
               {isTag && timerName && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
@@ -156,7 +154,9 @@ export default function TodoItem({
                   <span className="text-xs text-gray-400 mr-1">{timerName}</span>
                 </motion.div>
               )}
-              <span>{text}</span>
+
+              {/* 할일 텍스트 - 여기에만 line-through 적용 */}
+              <span className={`${checked ? 'line-through' : ''}`}>{text}</span>
             </div>
           </motion.div>
         </motion.div>

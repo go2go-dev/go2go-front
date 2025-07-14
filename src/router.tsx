@@ -33,10 +33,6 @@ export const router = createBrowserRouter([
         element: <AddTimer />,
       },
       {
-        path: 'timerDetail',
-        element: <TimerDetail />,
-      },
-      {
         path: 'setting',
         element: <Setting />,
       },

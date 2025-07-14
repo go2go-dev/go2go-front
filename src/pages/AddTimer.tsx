@@ -145,7 +145,7 @@ export default function AddTimer() {
   return (
     <div className="flex-1 pb-24 bg-white h-screen flex flex-col">
       {/* 상단 헤더 */}
-      <div className="flex items-center justify-between pt-12 pb-8">
+      <div className="flex items-center justify-between pt-8 pb-8">
         <X className="w-6 h-6 text-gray-600 cursor-pointer" onClick={() => navigate('/')} />
         <div></div>
       </div>

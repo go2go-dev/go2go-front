@@ -7,11 +7,15 @@ interface MobileLayoutProps {
 
 export default function MobileLayout({ children }: MobileLayoutProps) {
   const location = useLocation();
-  const isTodoPage = location.pathname === '/todo'; // 경로 비교
+  const isTodoPage = location.pathname === '/todo';
+  const isTimerDetailPage =
+    location.pathname.includes('/timer/') && location.pathname.endsWith('/detail');
 
   return (
     <div
-      className={`flex flex-row justify-center w-full min-h-dvh relative px-5  max-w-md mx-auto ${isTodoPage ? 'bg-100' : 'bg-white'}`}
+      className={`flex flex-row justify-center w-full min-h-dvh relative max-w-md mx-auto ${
+        isTodoPage ? 'bg-100' : 'bg-white'
+      } ${isTimerDetailPage ? '' : 'px-5'}`}
     >
       {children}
     </div>
