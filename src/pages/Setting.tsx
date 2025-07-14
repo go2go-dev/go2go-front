@@ -7,6 +7,26 @@ export default function Setting() {
   const navigate = useNavigate();
   const { data: user, isLoading, error } = useGetUserMe();
 
+  // 로그아웃 처리 함수
+  const handleLogout = () => {
+    try {
+      // React Native로 로그아웃 메시지 전송
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage('LOGOUT_REQUEST');
+        console.log('📤 React Native로 로그아웃 요청 전송');
+      } else {
+        // 웹에서 직접 실행할 경우 (개발환경)
+        console.log('🌐 웹 환경에서 로그아웃');
+        // 웹에서의 로그아웃 로직 (토큰 삭제, 홈으로 이동 등)
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('❌ 로그아웃 처리 실패:', error);
+    }
+  };
+
   return (
     <div className="flex-1 pt-12">
       {/* Header */}
@@ -81,7 +101,7 @@ export default function Setting() {
           <h2 className="text-sm font-medium text-gray-500">설정</h2>
 
           <div className="bg-white mt-2 divide-y divide-gray-100">
-            <SettingItem title="로그아웃" />
+            <SettingItem title="로그아웃" onClick={handleLogout} />
             <SettingItem title="회원탈퇴" />
           </div>
         </div>
