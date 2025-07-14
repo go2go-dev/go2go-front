@@ -17,13 +17,55 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // ✅ 효율적인 포커스 로직
   useEffect(() => {
-    const timer = setTimeout(() => {
-      inputRef.current?.focus();
-    }, 200);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    return () => clearTimeout(timer);
+    const focusInput = () => {
+      if (!inputRef.current) return false;
+
+      try {
+        inputRef.current.focus();
+
+        // 모바일에서만 추가 작업
+        if (isMobile) {
+          inputRef.current.click();
+        }
+
+        // 포커스 성공 확인
+        return document.activeElement === inputRef.current;
+      } catch (error) {
+        console.warn('Focus failed:', error);
+        return false;
+      }
+    };
+
+    // 단일 재시도 로직
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    const tryFocus = () => {
+      const success = focusInput();
+
+      if (!success && retryCount < maxRetries) {
+        retryCount++;
+        setTimeout(tryFocus, 100 * retryCount); // 100ms, 200ms, 300ms
+      }
+    };
+
+    // 즉시 시도
+    tryFocus();
+
+    // 정리 함수는 필요 없음 (타이머 하나만 사용)
   }, []);
+
+  // ✅ 간단한 애니메이션 완료 후 포커스
+  const handleAnimationComplete = () => {
+    // 애니메이션 완료 후 한 번만 포커스 시도
+    if (inputRef.current && document.activeElement !== inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -48,18 +90,17 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
     onClose?.();
   };
 
-  // ✅ 타이머 선택 시 키보드 유지
+  // ✅ 간단한 타이머 선택 핸들러
   const handleTimerSelect = (timerId: number, event: React.MouseEvent) => {
-    // 기본 동작 방지 (포커스 이동 방지)
     event.preventDefault();
     event.stopPropagation();
 
     setSelectedTimerId(timerId);
 
-    // input 포커스 즉시 복원
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    // 간단한 포커스 복원
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
   };
 
   return (
@@ -74,6 +115,7 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
+        onAnimationComplete={handleAnimationComplete}
         className="mb-4"
         ref={containerRef}
       >
@@ -99,49 +141,37 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
           </Checkbox.Root>
 
           <div className="text-sm flex-1 whitespace-pre-wrap">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSubmit();
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="할 일을 적어주세요"
+              className="w-full text-base focus:text-base border-0 outline-none bg-transparent placeholder-gray-400"
+              enterKeyHint="done"
+              inputMode="text"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+                if (e.key === 'Escape') {
+                  onClose?.();
+                }
               }}
-            >
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="할 일을 적어주세요"
-                className="w-full text-base focus:text-base border-0 outline-none bg-transparent placeholder-gray-400"
-                enterKeyHint="done"
-                inputMode="text"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault(); // 기본 엔터 동작 방지
-                    handleSubmit();
-                  }
-                  if (e.key === 'Escape') {
-                    onClose?.();
-                  }
-                }}
-                onBlur={(e) => {
-                  if (inputValue.trim()) {
-                    handleSubmit();
-                  }
-                  // 타이머 버튼이나 다른 내부 요소 클릭으로 인한 blur 방지
-                  const relatedTarget = e.relatedTarget as HTMLElement;
-                  if (!relatedTarget || containerRef.current?.contains(relatedTarget)) {
-                    // 컨테이너 내부 클릭이면 포커스 유지
-                    requestAnimationFrame(() => {
-                      inputRef.current?.focus();
-                    });
-                  }
-                }}
-              />
-            </form>
+              onBlur={(e) => {
+                const relatedTarget = e.relatedTarget as HTMLElement;
+                if (!relatedTarget || containerRef.current?.contains(relatedTarget)) {
+                  requestAnimationFrame(() => {
+                    inputRef.current?.focus();
+                  });
+                }
+              }}
+            />
           </div>
         </motion.div>
 
@@ -170,12 +200,10 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
                     duration: 0.2,
                   }}
                   whileTap={{ scale: 0.95 }}
-                  // ✅ 키보드 유지를 위한 이벤트 처리
                   onMouseDown={(e) => {
-                    e.preventDefault(); // 기본 포커스 이동 방지
+                    e.preventDefault();
                   }}
                   onClick={(e) => handleTimerSelect(timer.timerId, e)}
-                  // ✅ 탭 포커스 방지
                   tabIndex={-1}
                   type="button"
                   className={`min-w-fit px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors duration-200 ${

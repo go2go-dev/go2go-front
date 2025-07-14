@@ -14,6 +14,7 @@ export default function TodoApp() {
   const { timers, isFetching } = useGetSimpleTimers();
 
   const [isAdding, setIsAdding] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const navigate = useNavigate();
 
   const mappedData =
@@ -62,10 +63,32 @@ export default function TodoApp() {
 
       {/* 스크롤 가능한 콘텐츠 영역 */}
       <div
-        className="overflow-y-auto pb-24 scrollbar-hide "
+        className="overflow-y-auto pb-24 scrollbar-hide"
         style={{ height: 'calc(100vh - 80px)' }}
       >
-        <img src={todoChar} alt="먼지치우기배경" className="w-full" />
+        {/* ✅ Layout Shift 방지를 위한 이미지 컨테이너 */}
+        <div
+          className="w-full relative"
+          style={{
+            aspectRatio: '720/200', // GIF의 실제 비율로 조정 (예시)
+          }}
+        >
+          {/* 스켈레톤 로더 */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-lg" />
+          )}
+
+          {/* 실제 GIF 이미지 */}
+          <img
+            src={todoChar}
+            alt="먼지치우기배경"
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            onLoad={() => setImageLoaded(true)}
+            loading="eager" // 우선 로드
+          />
+        </div>
 
         {isAdding && (
           <>
