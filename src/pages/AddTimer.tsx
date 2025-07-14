@@ -143,9 +143,9 @@ export default function AddTimer() {
   }, [remainingSeconds]);
 
   return (
-    <div className="max-w-sm mx-auto bg-white h-screen flex flex-col pb-[120px]">
+    <div className="flex-1 pb-24 bg-white h-screen flex flex-col">
       {/* 상단 헤더 */}
-      <div className="flex items-center justify-between pt-5 pb-8">
+      <div className="flex items-center justify-between pt-12 pb-8">
         <X className="w-6 h-6 text-gray-600 cursor-pointer" onClick={() => navigate('/')} />
         <div></div>
       </div>
@@ -161,7 +161,7 @@ export default function AddTimer() {
           placeholder="타이머 이름"
           autoComplete="off"
           inputMode="text"
-          className="w-full px-0 py-3 text-lg border-0 border-b-2 border-gray-200 focus:border-blue-500 focus:outline-none bg-transparent"
+          className="w-full px-0 py-3 text-lg border-0 border-b-2 border-gray-200 focus:border-subYello3 focus:outline-none bg-transparent"
         />
       </div>
 
@@ -228,7 +228,7 @@ export default function AddTimer() {
         <button
           className={`w-full py-4  font-medium text-lg transition-colors ${
             timerName.trim()
-              ? 'bg-yellow-300 text-gray-800 hover:bg-yellow-400'
+              ? 'bg-subYello3 text-gray-800 hover:bg-subYello3'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
           disabled={!timerName.trim() || isPending}

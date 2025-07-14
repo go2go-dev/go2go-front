@@ -1,8 +1,10 @@
-import { User, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import TimerList from '@/components/timer/TimerList';
 import type { Timer } from '@/constants/types';
 import { useNavigate } from 'react-router-dom';
 import { useInfiniteTimers } from '@/hooks/useInfiniteTimers';
+import LogoIcon from '@/assets/svg/Group.svg?react';
+import ProfileIcon from '@/assets/svg/person.svg?react';
 
 export default function TimerApp() {
   const navigate = useNavigate();
@@ -24,12 +26,12 @@ export default function TimerApp() {
   };
 
   return (
-    <div className="max-w-sm mx-auto bg-white h-screen">
+    <div className="flex-1">
       {/* 헤더 */}
-      <div className="flex justify-between items-center pb-5 pt-4">
-        <h1 className="text-h2 text-black">타이머</h1>
-        <User onClick={() => navigate('/setting')}
-          className="w-6 h-6 text-gray-600" />
+
+      <div className="flex justify-between items-center pt-12 pb-8">
+        <LogoIcon className="h-5 left-0" />
+        <ProfileIcon onClick={() => navigate('/setting')} className="w-6 h-6 text-gray-600" />
       </div>
 
       {/* 타이머 리스트 영역 - 스크롤 가능한 고정 높이 */}

@@ -18,7 +18,7 @@ export default function TodoHeader({
   rightIcon = <PlusBtn />, // 기본값
 }: TodoHeaderProps) {
   return (
-    <div className="flex justify-between items-center pt-5 pb-5">
+    <div className="flex justify-between items-center pt-10 pb-5">
       <button onClick={onLeftClick} type="button">
         {leftIcon}
       </button>
