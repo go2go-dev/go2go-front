@@ -2,6 +2,8 @@ const colors = {
   main: '#FFF8A6',
   subYellow: '#FFF583',
   subPurple: '#C089F8',
+  subYello3: '#F8EF89',
+  subnoneYello3: '#F8EF89',
   subPurple2: '#C8C8EA',
   subPurple3: '#E1E1F4',
   subBlue: '#0B0B0D',
