@@ -16,7 +16,7 @@ export default function SettingItem({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-between py-4 px-6 bg-white hover:bg-gray-50 transition-colors"
+      className="w-full flex items-center justify-between py-4  bg-white hover:bg-gray-50 transition-colors"
     >
       <span className="text-base text-gray-900">{title}</span>
       <div className="flex items-center">

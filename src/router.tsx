@@ -1,7 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Layout from './layouts/Layout';
 import BottomLayout from './layouts/BottomLayout';
-import Home from './pages/Home';
 import Login from './pages/Login';
 import ErrorPage from './pages/ErrorPage';
 import TodoApp from './pages/TodoApp';
@@ -9,6 +8,7 @@ import AddTimer from './pages/AddTimer';
 import TimerDetail from './pages/TimerDetail';
 import Setting from './pages/Setting';
 import CountDown from './pages/CountDown';
+import TimerApp from './pages/Home';
 
 export const router = createBrowserRouter([
   {
@@ -17,8 +17,8 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       {
-        index: true,
-        element: <Home />,
+        path: '',
+        element: <TimerApp />,
       },
       {
         path: 'login',

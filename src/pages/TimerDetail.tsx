@@ -6,7 +6,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEndTimer } from '@/hooks/useEndTimer';
 import { useTimerDetail } from '@/hooks/useTimerDetail';
 import { useAddTodo } from '@/hooks/useAddTodo';
-import timerChar2 from '@/assets/gif/timer2.gif';
+import timerChar2 from '@/assets/gif/mung.gif';
 import PlusBtn from '@/assets/svg/plusBtnIcon.svg?react';
 
 // API 응답 타입 정의
@@ -163,7 +163,7 @@ export default function TimerDetail() {
   const hasTodos = todoList.length > 0;
 
   return (
-    <div className="max-w-sm mx-auto bg-white h-screen flex flex-col items-center pt-5 pb-6 relative overflow-hidden">
+    <div className="w-full bg-white flex flex-col items-center pt-5 pb-6 relative overflow-hidden">
       {/* 헤더 */}
       <div className="relative w-full">
         <div className="absolute left-4 top-2 cursor-pointer" onClick={handleBack}>

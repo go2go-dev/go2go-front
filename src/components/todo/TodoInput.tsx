@@ -103,7 +103,7 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="할 일을 적어주세요"
-              className="w-full border-0 outline-none bg-transparent placeholder-gray-400"
+              className="w-full text-base focus:text-base border-0 outline-none bg-transparent placeholder-gray-400"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   handleSubmit();
