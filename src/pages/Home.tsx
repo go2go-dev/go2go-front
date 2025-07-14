@@ -90,20 +90,20 @@ export default function TimerApp() {
             </button>
           </div>
           {/* 먼지 치우기 영역 */}
-          <div className="bg-100 p-4 flex items-center justify-between py-4 rounded-xl">
-            <div className="flex-1">
-              <div className="flex items-center">
-                <div className="text-body2 text-black">먼지 치우기</div>
-                <div className="text-body4 text-500 pl-3">할 일을 적고 해치워봐요</div>
-              </div>
-            </div>
-            <ChevronRight
-              className="w-5 h-5 text-black cursor-pointer"
-              onClick={() => navigate('/todo')}
-            />
-          </div>
         </div>
       )}
+      <div className="bg-100 p-4 flex items-center justify-between py-4 rounded-xl">
+        <div className="flex-1">
+          <div className="flex items-center">
+            <div className="text-body2 text-black">먼지 치우기</div>
+            <div className="text-body4 text-500 pl-3">할 일을 적고 해치워봐요</div>
+          </div>
+        </div>
+        <ChevronRight
+          className="w-5 h-5 text-black cursor-pointer"
+          onClick={() => navigate('/todo')}
+        />
+      </div>
     </div>
   );
 }

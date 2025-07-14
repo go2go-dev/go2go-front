@@ -99,41 +99,49 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
           </Checkbox.Root>
 
           <div className="text-sm flex-1 whitespace-pre-wrap">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="할 일을 적어주세요"
-              className="w-full text-base focus:text-base border-0 outline-none bg-transparent placeholder-gray-400"
-              // ✅ 키보드 "완료" 버튼 제거 및 키보드 최적화
-              inputMode="text"
-              enterKeyHint="done"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck="false"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault(); // 기본 엔터 동작 방지
-                  handleSubmit();
-                }
-                if (e.key === 'Escape') {
-                  onClose?.();
-                }
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
               }}
-              // ✅ blur 방지 강화
-              onBlur={(e) => {
-                // 타이머 버튼이나 다른 내부 요소 클릭으로 인한 blur 방지
-                const relatedTarget = e.relatedTarget as HTMLElement;
-                if (!relatedTarget || containerRef.current?.contains(relatedTarget)) {
-                  // 컨테이너 내부 클릭이면 포커스 유지
-                  requestAnimationFrame(() => {
-                    inputRef.current?.focus();
-                  });
-                }
-              }}
-            />
+            >
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="할 일을 적어주세요"
+                className="w-full text-base focus:text-base border-0 outline-none bg-transparent placeholder-gray-400"
+                enterKeyHint="done"
+                inputMode="text"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault(); // 기본 엔터 동작 방지
+                    handleSubmit();
+                  }
+                  if (e.key === 'Escape') {
+                    onClose?.();
+                  }
+                }}
+                onBlur={(e) => {
+                  if (inputValue.trim()) {
+                    handleSubmit();
+                  }
+                  // 타이머 버튼이나 다른 내부 요소 클릭으로 인한 blur 방지
+                  const relatedTarget = e.relatedTarget as HTMLElement;
+                  if (!relatedTarget || containerRef.current?.contains(relatedTarget)) {
+                    // 컨테이너 내부 클릭이면 포커스 유지
+                    requestAnimationFrame(() => {
+                      inputRef.current?.focus();
+                    });
+                  }
+                }}
+              />
+            </form>
           </div>
         </motion.div>
 
