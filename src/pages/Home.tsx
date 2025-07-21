@@ -5,9 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { useInfiniteTimers } from '@/hooks/useInfiniteTimers';
 import LogoIcon from '@/assets/svg/Group.svg?react';
 import ProfileIcon from '@/assets/svg/person.svg?react';
+import { useGetUserMe } from '@/hooks/useGetUser';
 
 export default function TimerApp() {
   const navigate = useNavigate();
+  const { data: user } = useGetUserMe();
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteTimers();
 
   // 서버에서 받아온 타이머 리스트 합치기
@@ -96,7 +98,9 @@ export default function TimerApp() {
         <div className="flex-1">
           <div className="flex items-center">
             <div className="text-body2 text-black">먼지 치우기</div>
-            <div className="text-body4 text-500 pl-3">할 일을 적고 해치워봐요</div>
+            <div className="text-body4 text-500 pl-3">
+              {user?.name || '사용자'}님의 할 일을 적고 해치워봐요
+            </div>
           </div>
         </div>
         <ChevronRight
