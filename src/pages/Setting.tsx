@@ -1,58 +1,58 @@
 import SettingItem from '@/components/setting/SettingItem';
-import { ArrowLeft, User } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useGetUserMe } from '@/hooks/useGetUser';
-import useRevoke from '@/hooks/useRevoke'; // ✅ 추가
+// import { useGetUserMe } from '@/hooks/useGetUser';
+// import useRevoke from '@/hooks/useRevoke'; // ✅ 추가
 
 export default function Setting() {
   const navigate = useNavigate();
-  const { data: user, isLoading, error } = useGetUserMe();
-  const revokeMutation = useRevoke(); // ✅ 회원탈퇴 훅
+  // const { data: user, isLoading, error } = useGetUserMe();
+  //const revokeMutation = useRevoke(); // ✅ 회원탈퇴 훅
 
   // 로그아웃 처리 함수
-  const handleLogout = () => {
-    try {
-      if (window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage('LOGOUT_REQUEST');
-        console.log('📤 React Native로 로그아웃 요청 전송');
-      } else {
-        console.log('🌐 웹 환경에서 로그아웃');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        navigate('/');
-      }
-    } catch (error) {
-      console.error('❌ 로그아웃 처리 실패:', error);
-    }
-  };
+  // const handleLogout = () => {
+  //   try {
+  //     if (window.ReactNativeWebView) {
+  //       window.ReactNativeWebView.postMessage('LOGOUT_REQUEST');
+  //       console.log('📤 React Native로 로그아웃 요청 전송');
+  //     } else {
+  //       console.log('🌐 웹 환경에서 로그아웃');
+  //       localStorage.removeItem('accessToken');
+  //       localStorage.removeItem('refreshToken');
+  //       navigate('/');
+  //     }
+  //   } catch (error) {
+  //     console.error('❌ 로그아웃 처리 실패:', error);
+  //   }
+  // };
 
-  // ✅ 회원탈퇴 처리 함수
-  const handleDeleteAccount = () => {
-    const isConfirmed = confirm(
-      '정말로 회원탈퇴를 하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.',
-    );
+  // // ✅ 회원탈퇴 처리 함수
+  // const handleDeleteAccount = () => {
+  //   const isConfirmed = confirm(
+  //     '정말로 회원탈퇴를 하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.',
+  //   );
 
-    if (!isConfirmed) return;
+  //   if (!isConfirmed) return;
 
-    // 두 번째 확인
-    const isDoubleConfirmed = confirm('마지막 확인입니다.\n회원탈퇴를 진행하시겠습니까?');
+  //   // 두 번째 확인
+  //   const isDoubleConfirmed = confirm('마지막 확인입니다.\n회원탈퇴를 진행하시겠습니까?');
 
-    if (!isDoubleConfirmed) return;
+  //   if (!isDoubleConfirmed) return;
 
-    revokeMutation.mutate(undefined, {
-      onSuccess: () => {
-        alert('회원탈퇴가 완료되었습니다.');
+  //   revokeMutation.mutate(undefined, {
+  //     onSuccess: () => {
+  //       alert('회원탈퇴가 완료되었습니다.');
 
-        // 웹 환경에서는 홈으로 이동
-        if (!window.ReactNativeWebView) {
-          navigate('/');
-        }
-      },
-      onError: () => {
-        alert('회원탈퇴에 실패했습니다. 다시 시도해주세요.');
-      },
-    });
-  };
+  //       // 웹 환경에서는 홈으로 이동
+  //       if (!window.ReactNativeWebView) {
+  //         navigate('/');
+  //       }
+  //     },
+  //     onError: () => {
+  //       alert('회원탈퇴에 실패했습니다. 다시 시도해주세요.');
+  //     },
+  //   });
+  // };
 
   return (
     <div className="flex-1 pt-12">
@@ -69,7 +69,7 @@ export default function Setting() {
 
       <div className="mt-6">
         {/* Profile Section */}
-        <div className="bg-white">
+        {/* <div className="bg-white">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center">
               <User className="w-6 h-6 text-white" />
@@ -95,7 +95,7 @@ export default function Setting() {
               )}
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* 전체 Section */}
         <div className="mt-8">
@@ -124,7 +124,7 @@ export default function Setting() {
         </div>
 
         {/* 설정 Section */}
-        <div className="mt-8">
+        {/* <div className="mt-8">
           <h2 className="text-sm font-medium text-gray-500">설정</h2>
 
           <div className="bg-white mt-2 divide-y divide-gray-100">
@@ -136,7 +136,7 @@ export default function Setting() {
               rightText={revokeMutation.isPending ? '처리 중...' : undefined} // 로딩 상태 표시
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Version Info */}
         <div className="mt-8">
