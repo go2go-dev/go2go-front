@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react'; // ✅ useEffect 추가
+import { useNavigate, useSearchParams } from 'react-router-dom'; // ✅ useSearchParams 추가
 import TodoSection from '@/components/todo/TodoSection';
 import TodoHeader from '@/components/TodoHeader';
 import TodoInputBar from '@/components/todo/TodoInput';
@@ -16,6 +16,21 @@ export default function TodoApp() {
   const [isAdding, setIsAdding] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams(); // ✅ 추가
+
+  // ✅ URL 파라미터 확인해서 자동으로 입력 모드 활성화
+  useEffect(() => {
+    const autoAdd = searchParams.get('autoAdd');
+    if (autoAdd === 'true') {
+      console.log('[TodoApp] autoAdd=true 감지, 입력 모드 활성화');
+      setIsAdding(true);
+
+      // URL 파라미터 제거 (깔끔하게)
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('autoAdd');
+      setSearchParams(newSearchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const mappedData =
     data?.map((section) => ({
@@ -66,11 +81,11 @@ export default function TodoApp() {
         className="overflow-y-auto pb-24 scrollbar-hide"
         style={{ height: 'calc(100vh - 80px)' }}
       >
-        {/* ✅ Layout Shift 방지를 위한 이미지 컨테이너 */}
+        {/* Layout Shift 방지를 위한 이미지 컨테이너 */}
         <div
           className="w-full relative"
           style={{
-            aspectRatio: '720/200', // GIF의 실제 비율로 조정 (예시)
+            aspectRatio: '720/200',
           }}
         >
           {/* 스켈레톤 로더 */}
@@ -86,7 +101,7 @@ export default function TodoApp() {
               imageLoaded ? 'opacity-100' : 'opacity-0'
             }`}
             onLoad={() => setImageLoaded(true)}
-            loading="eager" // 우선 로드
+            loading="eager"
           />
         </div>
 
