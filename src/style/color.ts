@@ -1,5 +1,7 @@
 const colors = {
   main: '#FFF8A6',
+  gray10: '#F4F5F8',
+  gray50: '#D3D4DA',
   subYellow: '#FFF583',
   subPurple: '#C089F8',
   subYello3: '#F8EF89',
@@ -17,6 +19,8 @@ const colors = {
   blue50: '#EBF6FF',
   blue100: '#DCEEFF',
   blue200: '#B8DDFF',
+  yellow100: '#FFF8A6',
+  yellowBorder: '#E0C864',
 };
 
 export default colors;
