@@ -17,13 +17,55 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // ✅ 효율적인 포커스 로직
   useEffect(() => {
-    const timer = setTimeout(() => {
-      inputRef.current?.focus();
-    }, 200);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    return () => clearTimeout(timer);
+    const focusInput = () => {
+      if (!inputRef.current) return false;
+
+      try {
+        inputRef.current.focus();
+
+        // 모바일에서만 추가 작업
+        if (isMobile) {
+          inputRef.current.click();
+        }
+
+        // 포커스 성공 확인
+        return document.activeElement === inputRef.current;
+      } catch (error) {
+        console.warn('Focus failed:', error);
+        return false;
+      }
+    };
+
+    // 단일 재시도 로직
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    const tryFocus = () => {
+      const success = focusInput();
+
+      if (!success && retryCount < maxRetries) {
+        retryCount++;
+        setTimeout(tryFocus, 100 * retryCount); // 100ms, 200ms, 300ms
+      }
+    };
+
+    // 즉시 시도
+    tryFocus();
+
+    // 정리 함수는 필요 없음 (타이머 하나만 사용)
   }, []);
+
+  // ✅ 간단한 애니메이션 완료 후 포커스
+  const handleAnimationComplete = () => {
+    // 애니메이션 완료 후 한 번만 포커스 시도
+    if (inputRef.current && document.activeElement !== inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -41,7 +83,6 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
   const handleSubmit = () => {
     if (!inputValue.trim()) return;
 
-    // ✅ 타이머가 선택되지 않았으면 undefined 전달
     onSubmit?.(inputValue.trim(), selectedTimerId || undefined);
     setInputValue('');
     setSelectedTimerId(null);
@@ -49,14 +90,17 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
     onClose?.();
   };
 
-  // ✅ 타이머 선택 시 키보드 포커스 유지
-  const handleTimerSelect = (timerId: number) => {
+  // ✅ 간단한 타이머 선택 핸들러
+  const handleTimerSelect = (timerId: number, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
     setSelectedTimerId(timerId);
 
-    // 타이머 선택 후 즉시 input에 포커스 다시 주기
-    setTimeout(() => {
+    // 간단한 포커스 복원
+    requestAnimationFrame(() => {
       inputRef.current?.focus();
-    }, 0);
+    });
   };
 
   return (
@@ -71,10 +115,10 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
+        onAnimationComplete={handleAnimationComplete}
         className="mb-4"
         ref={containerRef}
       >
-        {/* TodoItem과 동일한 스타일의 카드 */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -104,30 +148,34 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="할 일을 적어주세요"
               className="w-full text-base focus:text-base border-0 outline-none bg-transparent placeholder-gray-400"
+              enterKeyHint="done"
+              inputMode="text"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
+                  e.preventDefault();
                   handleSubmit();
                 }
                 if (e.key === 'Escape') {
                   onClose?.();
                 }
               }}
-              // ✅ input blur 방지 (타이머 버튼 클릭해도 포커스 유지)
               onBlur={(e) => {
-                // 타이머 버튼 클릭으로 인한 blur인지 확인
                 const relatedTarget = e.relatedTarget as HTMLElement;
-                if (relatedTarget?.closest('[data-timer-button]')) {
-                  // 타이머 버튼 클릭이면 포커스 다시 주기
-                  setTimeout(() => {
+                if (!relatedTarget || containerRef.current?.contains(relatedTarget)) {
+                  requestAnimationFrame(() => {
                     inputRef.current?.focus();
-                  }, 0);
+                  });
                 }
               }}
             />
           </div>
         </motion.div>
 
-        {/* 타이머 태그들 (카드 밖) */}
+        {/* 타이머 태그들 */}
         {Array.isArray(timers) && timers.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -152,9 +200,12 @@ export default function TodoInputBar({ onClose, onSubmit, timers }: TodoInputBar
                     duration: 0.2,
                   }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => handleTimerSelect(timer.timerId)}
-                  // ✅ 타이머 버튼임을 표시 (blur 이벤트에서 감지용)
-                  data-timer-button
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                  }}
+                  onClick={(e) => handleTimerSelect(timer.timerId, e)}
+                  tabIndex={-1}
+                  type="button"
                   className={`min-w-fit px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors duration-200 ${
                     selectedTimerId === timer.timerId
                       ? 'bg-subYellow text-black outline outline-1 outline-white outline-offset-[-1px]'

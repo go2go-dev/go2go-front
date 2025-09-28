@@ -9,6 +9,7 @@ import TimerDetail from './pages/TimerDetail';
 import Setting from './pages/Setting';
 import CountDown from './pages/CountDown';
 import TimerApp from './pages/Home';
+import AdhdTestPage from './pages/AdhdEventPage';
 
 export const router = createBrowserRouter([
   {
@@ -33,10 +34,6 @@ export const router = createBrowserRouter([
         element: <AddTimer />,
       },
       {
-        path: 'timerDetail',
-        element: <TimerDetail />,
-      },
-      {
         path: 'setting',
         element: <Setting />,
       },
@@ -47,6 +44,10 @@ export const router = createBrowserRouter([
       {
         path: 'timer/:timerId/detail',
         element: <TimerDetail />,
+      },
+      {
+        path: 'adhd',
+        element: <AdhdTestPage />,
       },
       {
         element: <BottomLayout />,

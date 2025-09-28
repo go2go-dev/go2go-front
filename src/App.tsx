@@ -5,10 +5,12 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { router } from './router';
 import FallbackUI from './pages/FallbackUI';
 import Loading from './pages/Loading/Loading';
+// ✅ useNativeMessage import 제거 (Router 내부에서 사용할 예정)
 
 const queryClient = new QueryClient();
 
 function App() {
+  // ✅ useNativeMessage() 호출 제거 (Router 외부에서는 사용 불가)
   const [isAppReady, setIsAppReady] = useState(false);
 
   // 웹뷰 환경 감지
@@ -54,7 +56,7 @@ function App() {
             window.dispatchEvent(event);
           } catch (error) {
             console.error('[Web] Navigate 실패, location.href 사용:', error);
-            window.location.href = '/home';
+            window.location.href = '/';
           }
         }, 500);
 

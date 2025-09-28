@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface TimerDeleteModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -32,7 +30,7 @@ const TimerDeleteModal: React.FC<TimerDeleteModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center px-5" // px-5 추가로 모바일 여백
       style={{
         backgroundColor: 'rgba(0, 0, 0, 0.4)',
         backdropFilter: 'blur(2px)',
@@ -41,12 +39,14 @@ const TimerDeleteModal: React.FC<TimerDeleteModalProps> = ({
     >
       {/* 모달 컨테이너 */}
       <div className="relative">
-        <div style={{ width: '273px', height: '98px', position: 'relative' }}>
-          {/* 상단 메시지 영역 */}
+        <div style={{ width: '273px', height: '86px', position: 'relative' }}>
+          {' '}
+          {/* 높이 98 → 86으로 축소 */}
+          {/* 상단 메시지 영역 - 패딩 축소 */}
           <div
             style={{
               width: 273,
-              height: 54,
+              height: 42, // 54 → 42로 축소 (12px 줄임)
               position: 'absolute',
               top: 0,
               left: 0,
@@ -57,22 +57,22 @@ const TimerDeleteModal: React.FC<TimerDeleteModalProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              padding: '8px 12px', // 패딩 추가로 텍스트 여백 조정
             }}
           >
             <div
               style={{
                 textAlign: 'center',
                 color: 'black',
-                fontSize: 16,
+                fontSize: 15, // 16 → 15로 살짝 축소
                 fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                 fontWeight: '600',
-                lineHeight: '22px',
+                lineHeight: '20px', // 22 → 20으로 축소
               }}
             >
               {timerName ? `"${timerName}" 타이머를 삭제하시겠습니까?` : '타이머 삭제하시겠습니까?'}
             </div>
           </div>
-
           {/* 취소 버튼 */}
           <button
             onClick={handleCancel}
@@ -81,7 +81,7 @@ const TimerDeleteModal: React.FC<TimerDeleteModalProps> = ({
               height: 44,
               position: 'absolute',
               left: 0,
-              top: 54,
+              top: 42, // 54 → 42로 조정
               background: 'rgba(242, 242, 242, 0.80)',
               borderBottomLeftRadius: 14,
               borderTop: '0.50px solid #D3D4DA',
@@ -113,7 +113,6 @@ const TimerDeleteModal: React.FC<TimerDeleteModalProps> = ({
               취소
             </div>
           </button>
-
           {/* 삭제 버튼 */}
           <button
             onClick={handleDelete}
@@ -122,7 +121,7 @@ const TimerDeleteModal: React.FC<TimerDeleteModalProps> = ({
               height: 44,
               position: 'absolute',
               left: 137,
-              top: 54,
+              top: 42, // 54 → 42로 조정
               background: 'rgba(242, 242, 242, 0.80)',
               borderBottomRightRadius: 14,
               borderLeft: '0.50px solid #e8e8eb',

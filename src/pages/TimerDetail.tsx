@@ -299,6 +299,9 @@ export default function TimerDetail() {
                               e.preventDefault();
                               setIsAdding(false);
                               setInputValue('');
+                              if (inputValue.trim()) {
+                                handleAddTodo();
+                              }
                             }
                           }}
                         />

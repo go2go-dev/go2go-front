@@ -2,22 +2,20 @@ import SettingItem from '@/components/setting/SettingItem';
 import { ArrowLeft, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGetUserMe } from '@/hooks/useGetUser';
-
+import useRevoke from '@/hooks/useRevoke';
 export default function Setting() {
   const navigate = useNavigate();
   const { data: user, isLoading, error } = useGetUserMe();
+  const revokeMutation = useRevoke();
 
   // 로그아웃 처리 함수
   const handleLogout = () => {
     try {
-      // React Native로 로그아웃 메시지 전송
       if (window.ReactNativeWebView) {
         window.ReactNativeWebView.postMessage('LOGOUT_REQUEST');
         console.log('📤 React Native로 로그아웃 요청 전송');
       } else {
-        // 웹에서 직접 실행할 경우 (개발환경)
         console.log('🌐 웹 환경에서 로그아웃');
-        // 웹에서의 로그아웃 로직 (토큰 삭제, 홈으로 이동 등)
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         navigate('/');
@@ -25,6 +23,34 @@ export default function Setting() {
     } catch (error) {
       console.error('❌ 로그아웃 처리 실패:', error);
     }
+  };
+
+  // ✅ 회원탈퇴 처리 함수
+  const handleDeleteAccount = () => {
+    const isConfirmed = confirm(
+      '정말로 회원탈퇴를 하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.',
+    );
+
+    if (!isConfirmed) return;
+
+    // 두 번째 확인
+    const isDoubleConfirmed = confirm('마지막 확인입니다.\n회원탈퇴를 진행하시겠습니까?');
+
+    if (!isDoubleConfirmed) return;
+
+    revokeMutation.mutate(undefined, {
+      onSuccess: () => {
+        alert('회원탈퇴가 완료되었습니다.');
+
+        // 웹 환경에서는 홈으로 이동
+        if (!window.ReactNativeWebView) {
+          navigate('/');
+        }
+      },
+      onError: () => {
+        alert('회원탈퇴에 실패했습니다. 다시 시도해주세요.');
+      },
+    });
   };
 
   return (
@@ -102,7 +128,12 @@ export default function Setting() {
 
           <div className="bg-white mt-2 divide-y divide-gray-100">
             <SettingItem title="로그아웃" onClick={handleLogout} />
-            <SettingItem title="회원탈퇴" />
+            <SettingItem
+              title="회원탈퇴"
+              onClick={handleDeleteAccount} // ✅ 회원탈퇴 핸들러 연결
+              hasArrow={revokeMutation.isPending ? false : true} // 로딩 중에는 화살표 숨김
+              rightText={revokeMutation.isPending ? '처리 중...' : undefined} // 로딩 상태 표시
+            />
           </div>
         </div>
 
