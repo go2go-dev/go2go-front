@@ -1,375 +1,262 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import ResultView from '@/components/eventadhd/ResultView';
+import { useEffect, useMemo, useState } from 'react';
+import MeonjiSvg from '@/assets/svg/meonjiTest.svg?react';
 
-// --------------------------------------------------
-// Utils
-// --------------------------------------------------
-function shuffle<T>(arr: T[]): T[] {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = (Math.random() * (i + 1)) | 0;
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+// 설정값들
+const CONFIG = {
+  TARGET_COUNT: 8,
+  DISTRACTOR_COUNT: 17,
+  WORD_SHOW_TIME: 500, // 0.5초
+  RECALL_TIME: 20000, // 20초
+};
 
-// --------------------------------------------------
-// Hook: Timed sequence player (fixed)
-// --------------------------------------------------
-function useSequencePlayer<T>({
-  sequence,
-  stepMs,
-  autoStart,
-  onFinished,
-}: {
-  sequence: T[];
-  stepMs: number;
-  autoStart?: boolean;
-  onFinished?: () => void;
-}) {
-  const [index, setIndex] = useState<number>(-1);
-  const timerRef = useRef<number | null>(null);
-
-  const stop = useCallback(() => {
-    if (timerRef.current != null) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
-
-  const tick = useCallback(
-    (nextIndex: number) => {
-      if (nextIndex >= sequence.length) {
-        stop();
-        onFinished?.();
-        return;
-      }
-      setIndex(nextIndex);
-      timerRef.current = window.setTimeout(() => tick(nextIndex + 1), stepMs);
-    },
-    [sequence.length, stepMs, onFinished, stop],
-  );
-
-  const start = useCallback(() => {
-    stop();
-    if (sequence.length === 0) return;
-    tick(0);
-  }, [sequence.length, tick, stop]);
-
-  useEffect(() => stop, [stop]);
-
-  useEffect(() => {
-    if (autoStart) start();
-  }, [autoStart, start]);
-
-  return {
-    index,
-    current: index >= 0 && index < sequence.length ? sequence[index] : undefined,
-    isRunning: index >= 0 && index < sequence.length,
-    start,
-    stop,
-    reset: () => setIndex(-1),
-  };
-}
-
-// --------------------------------------------------
-// Hook: Countdown (ms)
-// --------------------------------------------------
-function useCountdown(totalMs: number, opts?: { autoStart?: boolean; onEnd?: () => void }) {
-  const { autoStart, onEnd } = opts || {};
-  const [remaining, setRemaining] = useState<number>(autoStart ? totalMs : 0);
-  const rafRef = useRef<number | null>(null);
-  const startRef = useRef<number>(0);
-  const totalRef = useRef<number>(totalMs);
-
-  const stop = useCallback(() => {
-    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
-  }, []);
-
-  const frame = useCallback(() => {
-    const now = performance.now();
-    const elapsed = now - startRef.current;
-    const left = Math.max(0, totalRef.current - elapsed);
-    setRemaining(left);
-    if (left <= 0) {
-      stop();
-      onEnd?.();
-      return;
-    }
-    rafRef.current = requestAnimationFrame(frame);
-  }, [onEnd, stop]);
-
-  const start = useCallback(
-    (ms?: number) => {
-      stop();
-      totalRef.current = ms ?? totalRef.current;
-      startRef.current = performance.now();
-      setRemaining(totalRef.current);
-      rafRef.current = requestAnimationFrame(frame);
-    },
-    [frame, stop],
-  );
-
-  useEffect(() => stop, [stop]);
-  useEffect(() => {
-    if (autoStart) start(totalMs);
-  }, [autoStart, start, totalMs]);
-
-  return {
-    remainingMs: remaining,
-    isRunning: remaining > 0 && remaining < totalRef.current,
-    start,
-    stop,
-    reset: () => {
-      stop();
-      setRemaining(0);
-      totalRef.current = totalMs;
-    },
-  };
-}
-
-// --------------------------------------------------
-// Types & constants
-// --------------------------------------------------
-
-type Phase = 'idle' | 'memorize' | 'recall' | 'result';
-
-const WORD_POOL = [
-  '사과',
-  '바다',
-  '하늘',
-  '책상',
-  '코끼리',
-  '초콜릿',
-  '지하철',
-  '노트북',
-  '햇살',
-  '비누',
-  '우산',
-  '달리기',
-  '강아지',
-  '사막',
-  '컵라면',
-  '유리',
-  '바람',
-  '연필',
-  '셔츠',
-  '구름',
-  '커피',
-  '소파',
-  '카메라',
-  '종이',
-  '라디오',
-  '양말',
-  '무지개',
-  '치즈',
-  '버스',
-  '나무',
+const WORDS = [
+  '빌런',
+  '떡상',
+  '짱구',
+  '철컹',
+  '흑역',
+  '댕댕',
+  '킹받',
+  '몰루',
+  '현타',
+  '웃참',
+  '핫걸',
+  '쩝쩝',
+  '만렙',
+  '노답',
+  '폭망',
+  '개추',
+  '찐텐',
+  '꿀잼',
+  '노잼',
+  '급식',
+  '아싸',
+  '띵꼭',
+  '인싸',
+  '꼬북',
+  '본새',
 ];
 
-// --------------------------------------------------
-// Component
-// --------------------------------------------------
+function shuffle<T>(arr: T[]): T[] {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+type Phase = 'ready' | 'showing' | 'selecting' | 'finished';
+
 export default function AdhdTestPage() {
-  const targetCount = 8;
-  const distractorCount = 16;
-  const memorizeStepMs = 500; // 0.5s
-  const recallLimitMs = 20_000; // 20s
+  const [phase, setPhase] = useState<Phase>('ready');
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set());
+  const [score, setScore] = useState(0);
+  const [gameKey, setGameKey] = useState(0); // 게임 재시작할 때 단어 다시 섞기용
 
-  const [phase, setPhase] = useState<Phase>('idle');
-
-  const { targets, options } = useMemo(() => {
-    const shuffled = shuffle(WORD_POOL);
-    const targets = shuffled.slice(0, targetCount);
-    const distractors = shuffled.slice(targetCount, targetCount + distractorCount);
+  // 게임할 때마다 새로운 단어들 생성
+  const { targetWords, allOptions } = useMemo(() => {
+    const shuffled = shuffle(WORDS);
+    const targets = shuffled.slice(0, CONFIG.TARGET_COUNT);
+    const distractors = shuffled.slice(
+      CONFIG.TARGET_COUNT,
+      CONFIG.TARGET_COUNT + CONFIG.DISTRACTOR_COUNT,
+    );
     const options = shuffle([...targets, ...distractors]);
-    return { targets, options };
-  }, [targetCount, distractorCount]);
+    return { targetWords: targets, allOptions: options };
+  }, [gameKey]);
 
-  const seq = useSequencePlayer<string>({
-    sequence: targets,
-    stepMs: memorizeStepMs,
-    // autoStart removed; we'll control start via effect to play nice with React 18 StrictMode
-    onFinished: () => setPhase('recall'),
-  });
-
-  const {
-    remainingMs,
-    start: startCountdown,
-    stop: stopCountdown,
-  } = useCountdown(recallLimitMs, {
-    autoStart: false,
-    onEnd: () => {
-      handleSubmit();
-    },
-  });
-
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [score, setScore] = useState<number | null>(null);
-
-  const toggleSelect = useCallback((w: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(w)) next.delete(w);
-      else next.add(w);
-      return next;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (phase === 'recall') {
-      startCountdown(recallLimitMs);
-    } else {
-      stopCountdown();
-    }
-  }, [phase, startCountdown, stopCountdown]);
-
-  const startTest = () => {
-    setSelected(new Set());
-    setScore(null);
-    setPhase('memorize');
-    // sequence will start in the effect above when phase === 'memorize'
+  // 게임 시작
+  const startGame = () => {
+    setGameKey((k) => k + 1); // ← 새 라운드마다 셔플 트리거
+    setSelectedWords(new Set());
+    setCurrentWordIndex(0);
+    setPhase('showing');
   };
 
-  // Ensure sequence plays reliably in React 18 StrictMode (dev) by starting/stopping via effect
+  // 단어 보여주기 단계
   useEffect(() => {
-    if (phase === 'memorize') {
-      seq.reset();
-      seq.start();
-    } else {
-      seq.stop();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase]);
+    if (phase !== 'showing') return;
 
-  const handleSubmit = () => {
-    if (phase !== 'recall') return;
-    const correct = targets.filter((t) => selected.has(t)).length;
-    setScore(correct);
-    setPhase('result');
+    const timer = setTimeout(() => {
+      const nextIndex = currentWordIndex + 1;
+      if (nextIndex >= targetWords.length) {
+        // 모든 단어를 다 보여줬으면 선택 단계로
+        setPhase('selecting');
+        setTimeLeft(CONFIG.RECALL_TIME);
+      } else {
+        setCurrentWordIndex(nextIndex);
+      }
+    }, CONFIG.WORD_SHOW_TIME);
+
+    return () => clearTimeout(timer);
+  }, [phase, currentWordIndex, targetWords.length]);
+
+  // 선택 단계 타이머
+  useEffect(() => {
+    if (phase !== 'selecting' || timeLeft <= 0) return;
+
+    const timer = setTimeout(() => {
+      setTimeLeft(timeLeft - 100);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [phase, timeLeft]);
+
+  // 시간 종료시 자동 제출
+  useEffect(() => {
+    if (phase === 'selecting' && timeLeft <= 0) {
+      finishGame();
+    }
+  }, [phase, timeLeft]);
+
+  // 단어 선택/해제
+  const toggleWord = (word: string) => {
+    const newSelected = new Set(selectedWords);
+    if (newSelected.has(word)) {
+      newSelected.delete(word);
+    } else {
+      newSelected.add(word);
+    }
+    setSelectedWords(newSelected);
+  };
+
+  // 게임 완료
+  const finishGame = () => {
+    const correctCount = targetWords.filter((word) => selectedWords.has(word)).length;
+    setScore(correctCount);
+    setPhase('finished');
+  };
+
+  // 새 게임 시작
+  const restartGame = () => {
+    setGameKey((prev) => prev + 1);
+    setPhase('ready');
+  };
+
+  const formatTime = (ms: number) => {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    const mm = String(Math.floor(s / 60)).padStart(2, '0');
+    const ss = String(s % 60).padStart(2, '0');
+    return `${mm}:${ss}`;
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
-      <h1 className="text-2xl font-bold tracking-tight">ADHD 단어 기억 테스트</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        8개의 단어가 0.5초 간격으로 순서대로 표시됩니다. 모두 본 뒤, 기억나는 단어를 제한시간 20초
-        안에 선택해 제출하세요.
-      </p>
+    <div className="mx-auto max-w-sm px-6 min-h-screen flex flex-col">
+      {/* 헤더: 가운데 정렬 */}
+      {phase === 'ready' && (
+        <div className="min-h-screen flex flex-col items-center justify-center text-center gap-8 px-6">
+          {/* 헤더 */}
+          <div>
+            <h1 className="text-h2 tracking-tight">ADHD 단어 기억 테스트!</h1>
+            <p className="mt-2 text-base text-muted-foreground">
+              총 {CONFIG.TARGET_COUNT}개의 단어를 기억해보세요
+            </p>
+          </div>
 
-      {phase === 'idle' && (
-        <div className="mt-6">
+          {/* 마스코트 */}
+          <MeonjiSvg className="w-60 h-60" />
+
+          {/* 버튼 */}
           <button
-            onClick={startTest}
-            className="inline-flex items-center rounded-2xl bg-indigo-600 px-4 py-2 text-white shadow hover:bg-indigo-700 active:scale-[0.99]"
+            onClick={startGame}
+            className="w-full max-w-md bg-yellow-100 text-gray-900 py-4 rounded-xl text-lg font-medium shadow-sm hover:bg-yellow-200 transition"
           >
-            테스트 시작하기
+            시작하기
           </button>
         </div>
       )}
 
-      {phase === 'memorize' && (
-        <div className="mt-8 rounded-2xl border border-zinc-200 p-10 text-center">
-          <div className="text-5xl font-extrabold tabular-nums">{seq.current ?? '준비...'}</div>
-          <div className="mt-3 text-sm text-zinc-500">
-            {seq.isRunning ? `${seq.index! + 1} / ${targets.length}` : ''}
+      {phase === 'showing' && (
+        <section className="flex-1 flex flex-col items-center justify-center text-center ">
+          {/* 제목 */}
+          {/* <h1 className="text-3xl font-extrabold tracking-tight">ADHD 단어 기억 테스트!</h1> */}
+
+          {/* 고정 크기 카드 */}
+          <div
+            className="
+        w-[314px] h-[130px] 
+        bg-white 
+        shadow-sm 
+        flex flex-col items-center justify-center
+        pt-[13px] pb-[20px] gap-[13px]
+      "
+          >
+            <div className="text-3xl font-extrabold">{targetWords[currentWordIndex]}</div>
+            <div className="text-sm text-gray-400 font-medium">
+              {currentWordIndex + 1}/{targetWords.length}
+            </div>
           </div>
-        </div>
+        </section>
       )}
+      {/* 단어 선택하기 - 중앙 정렬 + 하단 버튼 */}
+      {phase === 'selecting' && (
+        <div className="min-h-screen flex flex-col px-6" key={gameKey}>
+          {/* 가운데 콘텐츠 */}
+          <section className="flex-1 flex flex-col items-center justify-center text-center gap-6">
+            {/* 안내문 */}
+            <p className="text-base font-medium">기억한 단어를 선택하세요!</p>
 
-      {phase === 'recall' && (
-        <div className="mt-8">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold">기억나는 단어를 모두 선택하세요</h2>
-            <CountdownBadge ms={remainingMs} />
-          </div>
+            {/* 큰 타이머 */}
+            <div className="text-5xl font-extrabold tracking-tight text-slate-800 font-mono">
+              {formatTime(timeLeft)}
+            </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-            {options.map((w) => {
-              const active = selected.has(w);
-              return (
-                <button
-                  key={w}
-                  onClick={() => toggleSelect(w)}
-                  aria-pressed={active}
-                  className={[
-                    'rounded-2xl border px-4 py-3 text-center font-semibold transition',
-                    active
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-zinc-200 bg-white hover:border-zinc-300',
-                  ].join(' ')}
-                >
-                  {w}
-                </button>
-              );
-            })}
-          </div>
+            {/* 5열 카드 그리드 */}
+            <div className="grid grid-cols-[repeat(5,51px)] gap-y-[15px] gap-x-[15px] justify-center">
+              {allOptions.map((word) => {
+                const active = selectedWords.has(word);
+                return (
+                  <button
+                    key={word}
+                    onClick={() => toggleWord(word)}
+                    aria-pressed={active}
+                    className={[
+                      'w-[51px] h-[71px] rounded-[3px] border-[1.5px]',
+                      'flex items-center justify-center',
+                      'transition',
+                      active
+                        ? 'bg-yellow100 border-yellowBorder shadow'
+                        : 'bg-white text-gray-900 border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm',
+                    ].join(' ')}
+                  >
+                    <span className="text-[16px] font-semibold leading-none">{word}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-          <div className="mt-4 flex items-center gap-3">
+            {/* 선택 개수 */}
+            <p className="mt-2 text-sm text-gray-700">선택한 단어 : {selectedWords.size}개</p>
+          </section>
+
+          {/* 하단(footer) 영역의 제출 버튼 */}
+          <div className="mt-6 mb-10 flex justify-center">
             <button
-              onClick={handleSubmit}
-              className="inline-flex items-center rounded-2xl bg-indigo-600 px-4 py-2 text-white shadow hover:bg-indigo-700 active:scale-[0.99]"
+              onClick={finishGame}
+              className="h-[50px] w-full rounded-[7px] bg-yellow100 font-medium shadow-sm hover:bg-yellowBorder transition"
             >
               제출하기
             </button>
-            <span className="text-sm text-zinc-600">
-              선택: {selected.size}개 / 정답 {targets.length}개
-            </span>
           </div>
         </div>
       )}
 
-      {phase === 'result' && (
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold">결과</h2>
-          <p className="mt-1 text-zinc-700">
-            정답 {targets.length}개 중 <b>{score}</b>개 맞춤
-          </p>
-
-          <details className="mt-3">
-            <summary className="cursor-pointer select-none text-sm text-zinc-600 hover:text-zinc-800">
-              정답 보기
-            </summary>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {targets.map((t) => (
-                <span
-                  key={t}
-                  className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-sm"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          </details>
-
-          <div className="mt-6 flex gap-3">
-            <button
-              onClick={() => setPhase('idle')}
-              className="rounded-2xl bg-zinc-200 px-4 py-2 text-zinc-900 hover:bg-zinc-300"
-            >
-              처음으로
-            </button>
-            <button
-              onClick={startTest}
-              className="rounded-2xl bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
-            >
-              다시 테스트
-            </button>
-          </div>
+      {/* 결과 화면 */}
+      {phase === 'finished' && (
+        <div className="flex-1 min-h-screen flex items-center justify-center">
+          <ResultView
+            score={score}
+            max={targetWords.length}
+            targets={targetWords}
+            onRestart={restartGame}
+            onBackToHome={restartGame}
+          />
         </div>
       )}
-    </div>
-  );
-}
-
-function CountdownBadge({ ms }: { ms: number }) {
-  const seconds = Math.ceil(ms / 1000);
-  return (
-    <div
-      aria-live="polite"
-      className="inline-flex items-center rounded-full border border-zinc-200 px-3 py-1 text-sm tabular-nums"
-    >
-      남은 시간: <b className="ml-1">{Math.max(0, seconds)}초</b>
     </div>
   );
 }
