@@ -14,11 +14,9 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
 
   return (
     <div
-      className={`flex flex-row justify-center w-full min-h-dvh relative max-w-md mx-auto ${
-        isTodoPage ? 'bg-100' : 'bg-white'
-      } ${isTimerDetailPage ? '' : 'px-5'}
-    ${isADHDPage ? 'bg-gray10' : 'bg-white'}
-      `}
+      className={`flex flex-row justify-center w-full min-h-dvh relative max-w-md mx-auto px-5
+    ${isTodoPage ? 'bg-100' : isADHDPage ? 'bg-100' : isTimerDetailPage ? '' : 'bg-white'}
+  `}
     >
       {children}
     </div>

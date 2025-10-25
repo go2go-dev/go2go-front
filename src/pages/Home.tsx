@@ -54,7 +54,7 @@ export default function TimerApp() {
       {/* 타이머 리스트 영역 - 스크롤 가능한 고정 높이 */}
       <div
         className="overflow-y-auto"
-        style={{ height: 'calc(100vh - 250px)' }}
+        style={{ height: 'calc(100vh - 350px)' }}
         onScroll={handleScroll}
       >
         {/* 로딩 상태 */}
@@ -106,6 +106,18 @@ export default function TimerApp() {
         <ChevronRight
           className="w-5 h-5 text-black cursor-pointer"
           onClick={() => navigate('/todo')}
+        />
+      </div>
+      <div className="bg-100 mt-3 p-4 flex items-center justify-between py-4 rounded-xl">
+        <div className="flex-1">
+          <div className="flex items-center">
+            <div className="text-body2 text-black">먼지 치우기</div>
+            <div className="text-body4 text-500 pl-3">기억력 테스트 하러가기</div>
+          </div>
+        </div>
+        <ChevronRight
+          className="w-5 h-5 text-black cursor-pointer"
+          onClick={() => navigate('/adhd')}
         />
       </div>
     </div>
