@@ -1,4 +1,29 @@
-export async function fetchWithAuth(input: RequestInfo, init?: RequestInit): Promise<Response> {
+// RN WebView에서 postMessage 쓸 수 있도록 타입 선언
+declare global {
+  interface Window {
+    ReactNativeWebView?: {
+      postMessage: (data: string) => void;
+    };
+  }
+}
+
+// 공통 API 에러 타입
+interface ApiErrorResponse {
+  message?: string;
+  [key: string]: any;
+}
+
+/**
+ * 인증 포함 fetch 유틸
+ * - localStorage에서 accessToken / refreshToken 읽어서 Authorization 헤더에 붙임
+ * - 401 + "만료된 토큰입니다." → /api/auth/refresh 호출
+ * - 새 토큰 발급되면 localStorage 갱신 + RN(WebView)에 TOKENS_UPDATED 전송
+ * - refresh 마저 실패 시 토큰 삭제 + RN에 TOKENS_INVALID 전송
+ */
+export async function fetchWithAuth(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
   const accessToken = localStorage.getItem('accessToken');
   const refreshToken = localStorage.getItem('refreshToken');
 
@@ -7,19 +32,27 @@ export async function fetchWithAuth(input: RequestInfo, init?: RequestInit): Pro
     ...init,
     headers: {
       ...init?.headers,
-      Authorization: `Bearer ${accessToken}`,
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       'Content-Type': 'application/json',
     },
   });
 
-  // 토큰 만료라면
+  // 토큰 만료 처리
   if (response.status === 401) {
-    const result = await response.clone().json();
+    const result: ApiErrorResponse | null = await response
+      .clone()
+      .json()
+      .catch(() => null);
 
     if (result?.message === '만료된 토큰입니다.') {
       console.log('[Auth] accessToken 만료, refresh 시도');
 
-      // ✅ 리프레시 요청
+      if (!refreshToken) {
+        console.error('[Auth] refreshToken 없음, 갱신 불가');
+        throw new Error('refreshToken 없음');
+      }
+
+      // 리프레시 요청
       const refreshRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/refresh`, {
         method: 'POST',
         headers: {
@@ -31,25 +64,25 @@ export async function fetchWithAuth(input: RequestInfo, init?: RequestInit): Pro
       if (!refreshRes.ok) {
         console.error('[Auth] refreshToken도 만료됨. 수동 로그인 필요');
 
-        // 토큰 정리 및 로그아웃 처리
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
 
-        // 로그아웃 이벤트 발생
         window.dispatchEvent(
           new CustomEvent('authLogout', {
             detail: { reason: 'refresh_failed' },
           }),
         );
 
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'TOKENS_INVALID' }));
+        }
+
         throw new Error('토큰 갱신 실패');
       }
 
-      // ✅ 수정: API 응답 구조에 맞게 토큰 추출
       const refreshData = await refreshRes.json();
       console.log('[Auth] 토큰 갱신 응답:', refreshData);
 
-      // API 응답이 { result: { accessToken, refreshToken } } 구조
       const newAccessToken = refreshData.result?.accessToken;
       const newRefreshToken = refreshData.result?.refreshToken;
 
@@ -58,20 +91,27 @@ export async function fetchWithAuth(input: RequestInfo, init?: RequestInit): Pro
         throw new Error('토큰 갱신 응답 형식 오류');
       }
 
-      // ✅ 새 토큰 저장
       localStorage.setItem('accessToken', newAccessToken);
       localStorage.setItem('refreshToken', newRefreshToken);
 
       console.log('[Auth] 토큰 재발급 성공. 요청 재시도');
 
-      // 토큰 갱신 이벤트 발생
       window.dispatchEvent(
         new CustomEvent('tokensRefreshed', {
           detail: { method: 'fetchWithAuth' },
         }),
       );
 
-      // 요청 재시도
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(
+          JSON.stringify({
+            type: 'TOKENS_UPDATED',
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+          }),
+        );
+      }
+
       response = await fetch(input, {
         ...init,
         headers: {
@@ -86,12 +126,15 @@ export async function fetchWithAuth(input: RequestInfo, init?: RequestInit): Pro
   return response;
 }
 
-// 사용 예시를 위한 wrapper 함수들
+// =============================
+//  편의용 래퍼 함수들
+// =============================
+
 export async function apiGet<T = any>(url: string): Promise<T> {
   const response = await fetchWithAuth(url);
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+    const errorData: ApiErrorResponse = await response.json().catch(() => ({}));
     throw new Error(`API Error: ${response.status} - ${errorData.message || 'Unknown error'}`);
   }
 
@@ -105,7 +148,7 @@ export async function apiPost<T = any>(url: string, data?: any): Promise<T> {
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+    const errorData: ApiErrorResponse = await response.json().catch(() => ({}));
     throw new Error(`API Error: ${response.status} - ${errorData.message || 'Unknown error'}`);
   }
 
@@ -119,7 +162,7 @@ export async function apiPut<T = any>(url: string, data?: any): Promise<T> {
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+    const errorData: ApiErrorResponse = await response.json().catch(() => ({}));
     throw new Error(`API Error: ${response.status} - ${errorData.message || 'Unknown error'}`);
   }
 
@@ -132,35 +175,27 @@ export async function apiDelete<T = any>(url: string): Promise<T> {
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+    const errorData: ApiErrorResponse = await response.json().catch(() => ({}));
     throw new Error(`API Error: ${response.status} - ${errorData.message || 'Unknown error'}`);
   }
 
   return response.json();
 }
 
-// 사용 예시:
 /*
-// GET 요청
-const userProfile = await apiGet('/api/user/profile');
+사용 예시:
 
-// POST 요청  
-const createResult = await apiPost('/api/user/create', {
-  name: '홍길동',
-  email: 'hong@example.com'
+// GET
+const notes = await apiGet(`${import.meta.env.VITE_API_URL}/api/notes`);
+
+// POST
+const created = await apiPost(`${import.meta.env.VITE_API_URL}/api/notes`, {
+  title: '새 메모',
+  content: '...',
 });
-
-// PUT 요청
-const updateResult = await apiPut('/api/user/123', {
-  name: '김철수'
-});
-
-// DELETE 요청
-await apiDelete('/api/user/123');
 
 // 직접 fetchWithAuth 사용
-const response = await fetchWithAuth('/api/custom-endpoint', {
-  method: 'PATCH',
-  body: JSON.stringify({ status: 'active' })
+const res = await fetchWithAuth(`${import.meta.env.VITE_API_URL}/api/me`, {
+  method: 'GET',
 });
 */
