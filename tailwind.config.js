@@ -7,6 +7,12 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        pretendard: ['Pretendard Variable', 'Pretendard', 'system-ui', 'sans-serif'],
+        kim: ['KIMWILDgag', 'Pretendard Variable', 'sans-serif'],
+        kkonkon: ['OngleipKkonkon', 'Pretendard Variable', 'sans-serif'],
+        memoment: ['MemomentKkukkukk', 'Pretendard Variable', 'sans-serif'],
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',

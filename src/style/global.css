@@ -1,5 +1,43 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
 
+@font-face {
+  font-family: 'KimWILDgag';
+  src: url('@/assets/fonts/_KIM_WILDgag-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Kkonkon';
+  src: url('@/assets/fonts/온글잎_콘콘체.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Memoment';
+  src: url('@/assets/fonts/MemomentKkukkukk.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---- Tailwind 유틸리티 클래스 ---- */
+
+@layer utilities {
+  .font-kim {
+    font-family: 'KimWILDgag', sans-serif;
+  }
+  .font-kkonkon {
+    font-family: 'Kkonkon', sans-serif;
+  }
+  .font-memoment {
+    font-family: 'Memoment', sans-serif;
+  }
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
