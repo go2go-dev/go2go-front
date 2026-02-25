@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 
 export type MemoColor = 'pink' | 'yellow' | 'blue' | 'white';
-export type MemoFont =  'kim' | 'kkonkon' | 'memoment';
+export type MemoFont = 'kim' | 'kkonkon' | 'memoment';
 export type StickerName =
   | 'sun'
   | 'wind'
@@ -14,6 +14,10 @@ export type StickerName =
   | 'star'
   | 'moon'
   | 'bear'
+  | 'black'
+  | 'dojanko'
+  | 'tanning'
+  | 'newyear'
   | 'letter';
 
 export interface StickerInstance {

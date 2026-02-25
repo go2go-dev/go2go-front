@@ -4,15 +4,13 @@ import { useNavigate } from 'react-router-dom';
 
 import LogoIcon from '@/assets/svg/Group.svg?react';
 import ProfileIcon from '@/assets/svg/person.svg?react';
-import { useGetUserMe } from '@/hooks/useGetUser';
+//import { useGetUserMe } from '@/hooks/useGetUser';
 import { memoStore, type Memo } from '@/stores/memoStore';
 import { MemoCard } from './Memocard';
 
-
-
 export default function TimerApp() {
   const navigate = useNavigate();
-  const { data: user } = useGetUserMe();
+  //const { data: user } = useGetUserMe();
 
   return (
     <div className="flex-1 flex flex-col">
@@ -51,61 +49,61 @@ export default function TimerApp() {
   );
 }
 
-type UrgentTodo = { id: number; text: string; checked: boolean };
+// type UrgentTodo = { id: number; text: string; checked: boolean };
 
-function UrgentTodoSection() {
-  const [todos, setTodos] = React.useState<UrgentTodo[]>([
-    { id: 1, text: '급한 불을 끄자!', checked: true },
-    { id: 2, text: '급한불을 끄자', checked: false },
-  ]);
+// function UrgentTodoSection() {
+//   const [todos, setTodos] = React.useState<UrgentTodo[]>([
+//     { id: 1, text: '급한 불을 끄자!', checked: true },
+//     { id: 2, text: '급한불을 끄자', checked: false },
+//   ]);
 
-  const topTwo = todos.slice(0, 2);
+//   const topTwo = todos.slice(0, 2);
 
-  const toggleTodo = (id: number) => {
-    setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, checked: !t.checked } : t)));
-  };
+//   const toggleTodo = (id: number) => {
+//     setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, checked: !t.checked } : t)));
+//   };
 
-  return (
-    <section className="w-full">
-      <div className="bg-[#F5F6F8] rounded-xl px-4 py-3.5">
-        <h2 className="text-[14px] font-semibold text-black mb-3">급한 불을 끄자!</h2>
+//   return (
+//     <section className="w-full">
+//       <div className="bg-[#F5F6F8] rounded-xl px-4 py-3.5">
+//         <h2 className="text-[14px] font-semibold text-black mb-3">급한 불을 끄자!</h2>
 
-        <div className="flex flex-col gap-2">
-          {topTwo.map((todo) => (
-            <button
-              key={todo.id}
-              type="button"
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left bg-white ${
-                todo.checked ? 'shadow-sm' : ''
-              }`}
-              onClick={() => toggleTodo(todo.id)}
-            >
-              <div
-                className={`w-5 h-5 rounded-md flex items-center justify-center border ${
-                  todo.checked ? 'bg-[#23263B] border-[#23263B]' : 'bg-white border-gray-300'
-                }`}
-              >
-                {todo.checked && (
-                  <span className="w-2 h-3 border-[2px] border-white border-l-transparent border-b-transparent rotate-45" />
-                )}
-              </div>
+//         <div className="flex flex-col gap-2">
+//           {topTwo.map((todo) => (
+//             <button
+//               key={todo.id}
+//               type="button"
+//               className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left bg-white ${
+//                 todo.checked ? 'shadow-sm' : ''
+//               }`}
+//               onClick={() => toggleTodo(todo.id)}
+//             >
+//               <div
+//                 className={`w-5 h-5 rounded-md flex items-center justify-center border ${
+//                   todo.checked ? 'bg-[#23263B] border-[#23263B]' : 'bg-white border-gray-300'
+//                 }`}
+//               >
+//                 {todo.checked && (
+//                   <span className="w-2 h-3 border-[2px] border-white border-l-transparent border-b-transparent rotate-45" />
+//                 )}
+//               </div>
 
-              <span
-                className={`text-[13px] ${todo.checked ? 'text-black font-semibold' : 'text-gray-500'}`}
-              >
-                {todo.text}
-              </span>
-            </button>
-          ))}
+//               <span
+//                 className={`text-[13px] ${todo.checked ? 'text-black font-semibold' : 'text-gray-500'}`}
+//               >
+//                 {todo.text}
+//               </span>
+//             </button>
+//           ))}
 
-          {topTwo.length === 0 && (
-            <div className="text-xs text-gray-400 py-2">급한 일을 즐겨찾기에 추가해보세요.</div>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
+//           {topTwo.length === 0 && (
+//             <div className="text-xs text-gray-400 py-2">급한 일을 즐겨찾기에 추가해보세요.</div>
+//           )}
+//         </div>
+//       </div>
+//     </section>
+//   );
+// }
 
 function MemoBoard() {
   const navigate = useNavigate();
